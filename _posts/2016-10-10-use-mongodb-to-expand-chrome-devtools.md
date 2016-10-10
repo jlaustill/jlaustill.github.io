@@ -8,11 +8,11 @@ categories: MongoDB
 
 Today I had the need to do some simple network analysis to figure out if my site had issues, or the network.  Chrome has a great network tab, but I wasn't interested in individual requests.  I poked around, but I couldn't find anywhere to see the total average wait time, or the min or max.  But I did notice an option to "copy all as HAR"
 
-![img/copyAllAsHAR.png]({{site.baseurl}}/_drafts/copyAllAsHAR.png)
+![img/copyAllAsHAR.png]({{site.baseurl}}/_includes/img/copyAllAsHAR.png)
 
 This format when pasted into notepad turned out to be JSON, happy dance :)
 
-![img/HARformat.png]({{site.baseurl}}/_drafts/HARformat.png)
+![img/HARformat.png]({{site.baseurl}}/_includes/img/HARformat.png)
 
 This gave me the idea to use MongoDB and a simple aggregation query to get my answers, and it worked awesome.  First step was to simply import that HAL document into a collection.  I used MongoChef, but you could just as easily save it to a file and use mongoimport.
 
@@ -59,7 +59,7 @@ db.local.aggregate(
 ```
 
 This gave me the values I was looking for in a result like this. 
-```JSON
+```javascript
 { 
     "_id" : {
         "_id" : ObjectId("57fbbb932a489818f0ffb31f")
