@@ -1,5 +1,5 @@
 ---
-published: false
+published: true
 layout: post
 date: '2016-10-10 10:10:10 -0600'
 categories: MongoDB
@@ -77,5 +77,3 @@ The HAL format has a decent amount of other values per request, I'm sure I will 
 
 Happy coding,
 Joshua
-
-
