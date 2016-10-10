@@ -3,6 +3,8 @@ published: true
 layout: post
 date: '2016-10-10 10:10:10 -0600'
 categories: MongoDB
+title: Use MongoDB to expand Chrome DevTools
+tags: MongoDB NoSQL Chrome DevTools
 ---
 ## Use MongoDB to expand Chrome Dev Tools
 
