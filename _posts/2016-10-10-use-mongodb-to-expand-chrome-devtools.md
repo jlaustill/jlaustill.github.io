@@ -60,15 +60,15 @@ db.local.aggregate(
 
 This gave me the values I was looking for in a result like this. 
 ```javascript
-{ 
+{
     "_id" : {
         "_id" : ObjectId("57fbbb932a489818f0ffb31f")
-    }, 
-    "averageWait" : 116.0295567020025, 
-    "longestWait" : 16766.984000045337, 
-    "shortestWait" : 1.43500004196539, 
-    "averageReceive" : 27.89588402001092, 
-    "longestReceive" : 219.2810000269676, 
+    },
+    "averageWait" : 116.0295567020025,
+    "longestWait" : 16766.984000045337,
+    "shortestWait" : 1.43500004196539,
+    "averageReceive" : 27.89588402001092,
+    "longestReceive" : 219.2810000269676,
     "shortestReceive" : 0.2569999778643677
 }
 ```
