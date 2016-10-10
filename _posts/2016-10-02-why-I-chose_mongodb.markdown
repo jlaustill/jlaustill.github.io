@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Why I chose MongoDB"
+tags: MongoDB NoSQL
 date:   2016-03-02 14:58:25 -0600
 categories: MongoDB
 ---
