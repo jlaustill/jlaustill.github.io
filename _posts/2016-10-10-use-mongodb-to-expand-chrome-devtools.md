@@ -63,7 +63,7 @@ db.local.aggregate(
 ```
 
 This gave me the values I was looking for in a result like this. 
-```javascript
+```
 {
     "_id" : {
         "_id" : ObjectId("57fbbb932a489818f0ffb31f")
