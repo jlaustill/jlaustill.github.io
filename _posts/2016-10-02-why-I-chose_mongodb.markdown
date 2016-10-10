@@ -1,9 +1,11 @@
 ---
 layout: post
-title:  "Why I chose MongoDB"
+title: Why I chose MongoDB
 tags: MongoDB NoSQL
-date:   2016-03-02 14:58:25 -0600
+date: '2016-03-02 14:58:25 -0600'
 categories: MongoDB
+published: true
+comments: true
 ---
 My journey to MongoDB starts a long time ago, probably back in 2005.  When I graduated college, I was offered a job as an MSSQL developer.  I had never used a database before, and they hired me based upon my aptitude for development, which was shocking because I had only done it as a hobby up until that point.  This first company I worked for wrote Pharmacy software, and we really struggled with performance, but we always managed to make it work.
 
