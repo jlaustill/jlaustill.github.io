@@ -48,7 +48,7 @@ Just clone the [gist](https://gist.github.com/d726407f3d74b3115e0f4d18fc5bc15c.g
 
 ```
 npm install request
-node MagentoStep1.js
+node MagentoAuthStep1.js
 ```
 
 It should output something that looks like this
@@ -68,7 +68,7 @@ http://dev.yoursite.com/admin/oauth_authorize?oauth_token=ff1469e90aa9b25868c8ed
 
 Of course replacing yoursite.com with your actual site, and use the oauth_token that was returned in step 1.  This will bring up a screen that looks like this
 ![img/copyAllAsHAR.png]({{site.baseurl}}/images/magentorestapi1/step1.png)
-Login using the admin user you setup when configuring the magento site, if you are already logged in you wont' see this screen.  You will just see the second screen, which looks like this.
+Login using the admin user you setup when configuring the magento site, if you are already logged in you won't see this screen.  You will just see the second screen, which looks like this.
 ![img/copyAllAsHAR.png]({{site.baseurl}}/images/magentorestapi1/step2.png)
 Click the "Authorize" button, and it will try to redirect to the url in step 1, in this case, http://thisis.broken/callback. Since all we need is the result, we don't really care if it works.  It will look like this
 
