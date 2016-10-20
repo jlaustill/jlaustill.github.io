@@ -45,22 +45,27 @@ request.post({
 ```
 
 Just clone the [gist](https://gist.github.com/d726407f3d74b3115e0f4d18fc5bc15c.git), replace your key, secret, and url, and run it with
+
 ```
 npm install request
 node MagentoStep1.js
 ```
 
 It should output something that looks like this
+
 ```
 oauth_token=ff1469e90aa9b25868c8ed4865aa8ecb&oauth_token_secret=d11447b004681b063c86accae032cc4c&oauth_callback_confirmed=true
 ```
+
 Save these, you will need them in the next steps.
 
 **Step 2**
 Next, we will skip to the browser.  This is the part that really really confused me.  Just browse to
+
 ```
 http://dev.yoursite.com/admin/oauth_authorize?oauth_token=ff1469e90aa9b25868c8ed4865aa8ecb
 ```
+
 Of course replacing yoursite.com with your actual site, and use the oauth_token that was returned in step 1.  This will bring up a screen that looks like this
 ![img/copyAllAsHAR.png]({{site.baseurl}}/images/magentorestapi1/step1.png)
 Login using the admin user you setup when configuring the magento site, if you are already logged in you wont' see this screen.  You will just see the second screen, which looks like this.
@@ -72,6 +77,7 @@ All we are interested in is the oauth_verifier in the callback url, copy it stra
 
 **Step 3**
 The final step is another POST request to /oauth/token.  I wrote another [gist](https://gist.github.com/8c18a05b414b4851a794a796d1212c19.git) that you can clone.  You will need a stupid amount of tokens for this one.  You will need the consumer key and consumer secret from when you configured the Magento REST API.  You will need the oauth_token and oauth_token_secret from step 1.  Lastly, you will need the oauth_verifier from step 2.  Put it all together, and the script looks like this
+
 ```
 var request = require('request');
 
@@ -98,15 +104,20 @@ request.post({url:url, oauth:oauth}, function (err, req, body) {
   console.log(body);
 });
 ```
+
 Just replace all the values at the beginning, and run it like this
+
 ```
 npm install request
 node MagentoAuthStep3.js
 ```
+
 If all goes well, you should get back a permanent token and secret that looks like this
+
 ```
 oauth_token=5aac4eac990c14d0646c680375f4a724&oauth_token_secret=0256cbbdc7943206666e8bd7684d6da4
 ```
+
 Keep this safe, back them up, don't loose these.  This process is horrible, and you probably don't want to go through it anymore times than I do!
 
 Let me know if you have any suggestions to improve upon this in the comments.  It would be possible with a little work to automate step 2, parse out the html form, and auto post it.  I don't think it's worth the work at this point however as I won't be doing this very often.
