@@ -1,7 +1,7 @@
 # Jekyll configuration
 
 name: Joshua Austill's blog
-description: Software Developer
+description: I'm a full stack developer, certified in MongoDB and C#.  But I spend most of my time in javascript, node.js and knockout.js.
 
 gems:
   - jekyll-seo-tag
