@@ -37,6 +37,7 @@ nano build.sh
 ```
 
 Add the following to this file (you will need minify installed globally, npm install -g minify)
+
 ```bash
 #!/bin/bash
 
