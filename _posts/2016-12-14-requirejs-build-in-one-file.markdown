@@ -47,7 +47,8 @@ minify ../www-build/js/build.js > ../www-build/js/build.min.js
 ```
 
 Then make it executable, and execute it (sorry windows peeps, you are on your own here)
-```bash
+
+```
 chmod +x build.sh
 ./build.sh
 ```
@@ -58,12 +59,14 @@ This will leave you with two files in your www-build/js directory called build.j
 <script data-main="js/app" src="js/lib/require.js"></script>
 ```
 To this
+
 ```html
 <script data-main="js/app" src="js/build.min.js" async></script>
 ```
 
 Start the sever back up
-```bash
+
+```
 node server.js
 ```
 
