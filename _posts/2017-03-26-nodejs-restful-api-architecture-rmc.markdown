@@ -221,7 +221,7 @@ router.route("/")
 module.exports = router;
 ```
 
-Here you can see we define GET /thing and POST /thing.  We also include the /thing/all routes, which will live in a file under /routers/thing/all.js.  This way, it matches the route /thing/all.  You will end up with a file and a route file for each route.  In this case thing.js and /thing.  You can always know that the folders contains the routes further down the line, and they will always match the route.  
+Here you can see we define GET /thing and POST /thing.  We also include the /thing/all routes, which will live in a file under /routers/thing/all.js.  This way, it matches the route /thing/all.  You will end up with a file and a route folder for each route.  In this case thing.js and /thing.  You can always know that the folders contains the routes further down the line, and they will always match the route.  
 
 So create the all.js file under /routers/thing
 ```
