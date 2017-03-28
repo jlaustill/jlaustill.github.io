@@ -31,7 +31,7 @@ So the first thing we'll do is create our thing model.  Create a file in the mod
 
 ```
 const mongoose = require("mongoose"),
-      Schema = mongoose.Schema,
+      Schema = mongoose.Schema;
 
 // create the thing schema
 thingSchema = new Schema({
