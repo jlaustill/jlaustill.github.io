@@ -63,7 +63,7 @@ The challenge I came up with is this: given a collection of documents, update on
     ]
 }
 ```
-The update is to find the document for the person named John Doe and update his mobile number to 555-555-0003.  This must be done without data loss, and in an [ACID][8] compliant fashion.  
+The update is to find the document for the person named John Doe and update his mobile number to 555-555-0003.  This must be done without data loss and in an [ACID][8] compliant fashion.  
 
 ## PostgreSQL
 PostgreSQL is up first.  First things first, we can't use a database that doesn't exist.
@@ -175,7 +175,7 @@ test=#
 ```
 Wait!  What happened to my deleted and needsUpdated fields?  Well, in order to do an update like this your JSON needs to have a schema!  It doesn't appear that PostgreSQL gives you a way to reach inside that array and update the mobile number.  You have to replace the entire document with the one you build up.  This speaks to one of my two main bullet points.  Yes, PostgreSQL has native JSON support.  But not very good support in this case.
 
-One of our challenge requirements was also ACID compliance.  Since this update looses data, it doesn't meet the consistency goal.  In order to be consistent, we must leave the database in a valid state.  Loosing our deleted and needsUpdated fields leaves our database in a non-valid state.
+One of our challenge requirements was also ACID compliance.  Since this update loses data, it doesn't meet the consistency goal.  In order to be consistent, we must leave the database in a valid state.  Losing our deleted and needsUpdated fields leaves our database in a non-valid state.
 
 So what are our options?  We could retrieve the object in code, parse it into an object, change the number and then save it back.  But this wouldn't be ACID compliant, what if that document was updated between the time you pulled it and the time you saved it?  This again breaks the consistency requirement.  In this challenge, PostgreSQL fails as far as I can tell.  If I'm missing something leave me a comment and I'll be happy to update this post.
 
@@ -213,7 +213,7 @@ WriteResult({ "nInserted" : 1 })
 { "_id" : ObjectId("59321e4fbd7153e9ec51795f"), "name" : "Jane Dane", "phones" : [ { "type" : "mobile", "number" : "555-555-0030", "needsUpdated" : true }, { "type" : "home", "number" : "555-555-0020" }, { "type" : "work", "number" : "555-555-0010" } ] }
 >
 ```
-It lets us insert even though the database and collection weren't defined.  This is half of the essense of being schemaless, but as we'll see in a moment, it's not the most exciting part.  The first part of updating our document is to find it, we do that by giving the find command a key:value pair for name John Doe.
+It let's us insert even though the database and collection weren't defined.  This is half of the essense of being schemaless, but as we'll see in a moment, it's not the most exciting part.  The first part of updating our document is to find it, we do that by giving the find command a key:value pair for name John Doe.
 ```javascript
 > db.people.find({"name":"John Doe"}).pretty();
 {
@@ -296,12 +296,12 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
 ```
 There we go, John Doe's mobile number is updated to 555-555-0003.  Also, no data was lost, the deleted and needsUpdated data is still there.  This is the real meaning behind schemaless.  Your data not only doesn't have to define a schema, but you can interact with only part of the object and the rest of the object stays intact.  This ensures consistent data in a valid state because MongoDB assumes you will only care about the part of the object you are updating or selecting, etc.  
 
-Lastly, MongoDB is ACID compliant at the document level.  Since this update affects only this document we are safe.  Many people that haven't worked with document stores a lot don't understand this concept and still think in terms of tables and joins.  This makes it hard to understand how a database that is only atomic at the document level can work.  This very simple example demonstrates one way data is modeled in documents that would be multiple tables in an RDBMS.  You would need a person table and a phones table with a foreign key back to the person table.  In that case being ACID would require a transaction to update the person table and phones table.  In MongoDB, since they are in the same document we don't have that requirement.
+Lastly, MongoDB is ACID compliant at the document level.  Since this update affects only this document we are safe.  Many people that haven't worked with document stores a lot don't understand this concept and still think in terms of tables and joins.  This makes it hard to understand how a database that is only atomic at the document level can work.  This very simple example demonstrates one-way data is modeled in documents that would be multiple tables in an RDBMS.  You would need a person table and a phones table with a foreign key back to the person table.  In that case being ACID would require a transaction to update the person table and phones table.  In MongoDB, since they are in the same document we don't have that requirement.
 
 ## Conclusion
-After this look at doing a very simple JSON update in postgresql and MongoDB I think it's pretty clear that working with JSON is much more robust and straight forward in MongoDB.  That doesn't take away from postgresql as an RDBMS however.  And I would encourage you to check it out when it is the right tool for the job at hand.
+After this look at doing a very simple JSON update in PostgreSQL and MongoDB, I think it's pretty clear that working with JSON is much more robust and straight forward in MongoDB.  That doesn't take away from PostgreSQL as an RDBMS however.  And I would encourage you to check it out when it is the right tool for the job at hand.
 
-This was a very simple challenge that barely scratched the surface of what you can do with MongoDB, and also illustrates that native JSON support doesn't mean much in and of itself.  It clearly showed what is meant by schemaless, which has nothing to do with whether your data has a schema(of course it does!).
+This was a very simple challenge that barely scratched the surface of what you can do with MongoDB, and also illustrates that native JSON support doesn't mean much in and of itself.  It clearly showed what is meant by schemaless, which has nothing to do with whether your data has a schema (of course it does!).
 
 Happy coding!
 Joshua
