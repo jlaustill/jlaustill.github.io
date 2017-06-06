@@ -1,7 +1,7 @@
 ---
 layout: post
-title: JSON Update Support in Postgresql vs MongoDB
-tags: MongoDB Postgresql JSON NoSQL
+title: JSON Update Support in PostgreSQL vs MongoDB
+tags: MongoDB PostgreSQL JSON NoSQL
 date: '2017-06-05 19:14:25 -0600'
 categories: Databases
 published: true
@@ -10,16 +10,16 @@ share: true
 ---
 
 ## Introduction
-I came across a post on [Quora][4] the other day where someone was asking about whether to use [Postgresql][6] or [MongoDB][7] and why.  I have had great experiences with both databases, so it caught my interest.  I was, however, surprised at the extent to which generalities were thrown around and no details were given.  I saw two themes repeating themselves over and over.
+I came across a post on [Quora][4] the other day where someone was asking about whether to use [PostgreSQL][6] or [MongoDB][7] and why.  I have had great experiences with both databases, so it caught my interest.  I was, however, surprised at the extent to which generalities were thrown around and no details were given.  I saw two themes repeating themselves over and over.
 
 * MongoDB isn't really schemaless, all data has a schema
-* Postgresql has had native JSON support for years
+* PostgreSQL has had native JSON support for years
 
 Both of these statements are overly general at best and misleading at worst.  So I decided to concoct a very simple JSON challenge, and then try to solve it in both.  I went out of my way to find an example that would serve as a good reference for why both of these statements above should be taken with a grain of salt.
 
-My experiences with Postgresql are mainly in the form of an IBM Netezza Appliance used for data warehousing.  That experience was like a breath of fresh air after trying to do the same thing in MSSQL.  I have nothing but good things to say about Postgresql and it's use in analytics.  If you are starting a new DW project, I'd recommend checking out [Postgresql-XL.][5]  However, last time I checked it out for use as a document storage database I was left wanting.  That was a few versions ago, so it's time to review the newest version and compare it with the newest version of MongoDB.  
+My experiences with PostgreSQL are mainly in the form of an IBM Netezza Appliance used for data warehousing.  That experience was like a breath of fresh air after trying to do the same thing in MSSQL.  I have nothing but good things to say about PostgreSQL and it's use in analytics.  If you are starting a new DW project, I'd recommend checking out [PostgreSQL-XL.][5]  However, last time I checked it out for use as a document storage database I was left wanting.  That was a few versions ago, so it's time to review the newest version and compare it with the newest version of MongoDB.  
 
-This post will concern itself strictly with MongoDB 3.4 and Postgresql 9.6.  The challenge will be simple, and we will see how they stack up to each other with specific regard to updating JSON.  There are plenty of posts out there about how to query JSON data with Postgresql, and plenty about indexes as well.  So I will concentrate purely on updating in this post.
+This post will concern itself strictly with MongoDB 3.4 and PostgreSQL 9.6.  The challenge will be simple, and we will see how they stack up to each other with specific regard to updating JSON.  There are plenty of posts out there about how to query JSON data with PostgreSQL, and plenty about indexes as well.  So I will concentrate purely on updating in this post.
 
 ## The challenge
 The challenge I came up with is this, given a collection of documents, update one.  That's pretty much it.  The update will be to a sub-document stored in an array, a very common pattern when working with documents.  The documents will be stored in a table or collection called test, and look like this:
@@ -65,8 +65,8 @@ The challenge I came up with is this, given a collection of documents, update on
 ```
 The update is to find the document for the person named John Doe and update his mobile number to 555-555-0003.  This must be done without data loss, and in an [ACID][8] compliant fashion.  
 
-## Postgresql
-Postgresql is up first.  First things first, we can't use a database that doesn't exist.
+## PostgreSQL
+PostgreSQL is up first.  First things first, we can't use a database that doesn't exist.
 
 ```sql
 postgres=# \connect test;
@@ -83,7 +83,7 @@ postgres=# \connect test;
 You are now connected to database "test" as user "postgres".
 test=#
 ```
-Next, Postgresql is not schemaless.  You MUST define your schema before you can insert data into it.  
+Next, PostgreSQL is not schemaless.  You MUST define your schema before you can insert data into it.  
 
 ```sql
 test=# insert into t_json (c_json) values ('{"name":"John Doe","phones": [{"type":"mobile","number":"555-555-0000", "deleted": false},{"type":"home","number":"555-555-0001", "needsUpdated": true},{"type": "work","number": "555-555-0002"}]}');
@@ -126,7 +126,7 @@ test=# select * from t_json;
 test=#
 ```
 
-We are now set up for our challenge, all we need to do is write a query to update John Doe's mobile number and we are done.  I dug into the Postgresql docs [here.][1] First things first, they have a way to select the document we want using a ->> selector.  It looks like you need a different selector -> to select an object by name.  But since our name field is text, we use the ->> selector.
+We are now set up for our challenge, all we need to do is write a query to update John Doe's mobile number and we are done.  I dug into the PostgreSQL docs [here.][1] First things first, they have a way to select the document we want using a ->> selector.  It looks like you need a different selector -> to select an object by name.  But since our name field is text, we use the ->> selector.
 
 ```sql
 test=# select c_json from t_json where c_json->>'name' = 'John Doe';
