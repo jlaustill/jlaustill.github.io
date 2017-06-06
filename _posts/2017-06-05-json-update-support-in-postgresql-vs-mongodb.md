@@ -17,12 +17,12 @@ I came across a post on [Quora][4] the other day where someone was asking about 
 
 Both of these statements are overly general at best and misleading at worst.  So I decided to concoct a very simple JSON challenge, and then try to solve it in both.  I went out of my way to find an example that would serve as a good reference for why both of these statements above should be taken with a grain of salt.
 
-My experiences with PostgreSQL are mainly in the form of an IBM Netezza Appliance used for data warehousing.  That experience was like a breath of fresh air after trying to do the same thing in MSSQL.  I have nothing but good things to say about PostgreSQL and it's use in analytics.  If you are starting a new DW project, I'd recommend checking out [PostgreSQL-XL.][5]  However, last time I checked it out for use as a document storage database I was left wanting.  That was a few versions ago, so it's time to review the newest version and compare it with the newest version of MongoDB.  
+My experiences with PostgreSQL are mainly in the form of an IBM Netezza Appliance used for data warehousing.  That experience was like a breath of fresh air after trying to do the same thing in MSSQL.  I have nothing but good things to say about PostgreSQL and its use in analytics.  If you are starting a new DW project, I'd recommend checking out [PostgreSQL-XL.][5]  However, last time I checked it out for use as a document storage database I was left wanting.  That was a few versions ago, so it's time to review the newest version and compare it with the newest version of MongoDB.  
 
 This post will concern itself strictly with MongoDB 3.4 and PostgreSQL 9.6.  The challenge will be simple, and we will see how they stack up to each other with specific regard to updating JSON.  There are plenty of posts out there about how to query JSON data with PostgreSQL, and plenty about indexes as well.  So I will concentrate purely on updating in this post.
 
 ## The challenge
-The challenge I came up with is this, given a collection of documents, update one.  That's pretty much it.  The update will be to a sub-document stored in an array, a very common pattern when working with documents.  The documents will be stored in a table or collection called test, and look like this:
+The challenge I came up with is this: given a collection of documents, update one.  That's pretty much it.  The update will be to a sub-document stored in an array, a very common pattern when working with documents.  The documents will be stored in a table or collection called test, and look like this:
 
 ```javascript
 {
