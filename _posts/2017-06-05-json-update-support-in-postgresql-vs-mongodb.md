@@ -202,7 +202,7 @@ How can you switch to a database that doesn't exist?  Simple, because MongoDB is
 > show collections;
 >
 ```
-Nothing.  This doesn't mean we can't use it, it just means nothing has been saved here yet.  So lets insert our test data.
+Nothing.  This doesn't mean we can't use it, it just means nothing has been saved here yet.  So let's insert our test data.
 ```javascript
 > db.people.insert({"name":"John Doe","phones": [{"type":"mobile","number":"555-555-0000", "deleted": false},{"type":"home","number":"555-555-0001", "needsUpdated": true},{"type": "work","number": "555-555-0002"}]});
 WriteResult({ "nInserted" : 1 })
@@ -213,7 +213,7 @@ WriteResult({ "nInserted" : 1 })
 { "_id" : ObjectId("59321e4fbd7153e9ec51795f"), "name" : "Jane Dane", "phones" : [ { "type" : "mobile", "number" : "555-555-0030", "needsUpdated" : true }, { "type" : "home", "number" : "555-555-0020" }, { "type" : "work", "number" : "555-555-0010" } ] }
 >
 ```
-It let's us insert even though the database and collection weren't defined.  This is half of the essense of being schemaless, but as we'll see in a moment, it's not the most exciting part.  The first part of updating our document is to find it, we do that by giving the find command a key:value pair for name John Doe.
+It lets us insert even though the database and collection weren't defined.  This is half of the essense of being schemaless, but as we'll see in a moment, it's not the most exciting part.  The first part of updating our document is to find it, we do that by giving the find command a key:value pair for name John Doe.
 ```javascript
 > db.people.find({"name":"John Doe"}).pretty();
 {
