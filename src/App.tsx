@@ -1,9 +1,13 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { CircularProgress, Box } from '@mui/material';
 import AppLayout from './components/layout/AppLayout';
 import Home from './pages/Home';
 import BlogList from './pages/blog/BlogList';
 import BlogPost from './pages/blog/BlogPost';
-import CompoundTurboCalculator from './pages/utils/CompoundTurboCalculator';
+import CompoundTurboCalculator from './pages/turbo-calculator/CompoundTurboCalculator';
+
+const KfaTranslator = lazy(() => import('./pages/kfa/KfaTranslator'));
 
 const App = () => {
   return (
@@ -12,9 +16,20 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/blog" element={<BlogList />} />
         <Route path="/blog/:postNumber" element={<BlogPost />} />
+        <Route path="/turbo-calculator" element={<CompoundTurboCalculator />} />
         <Route
-          path="/utils/compound-turbo-calculator"
-          element={<CompoundTurboCalculator />}
+          path="/kfa"
+          element={
+            <Suspense
+              fallback={
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                  <CircularProgress />
+                </Box>
+              }
+            >
+              <KfaTranslator />
+            </Suspense>
+          }
         />
       </Routes>
     </AppLayout>

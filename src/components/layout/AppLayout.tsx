@@ -18,8 +18,16 @@ const AppLayout = ({ children }: ILayoutProps) => {
           <Button color="inherit" component={RouterLink} to="/blog">
             Blog
           </Button>
-          <Button color="inherit" component={RouterLink} to="/utils/compound-turbo-calculator">
-            Utils
+          <Button color="inherit" component={RouterLink} to="/turbo-calculator">
+            Turbo Calculator
+          </Button>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/kfa"
+            sx={{ textTransform: 'none' }}
+          >
+            kfa
           </Button>
         </Toolbar>
       </AppBar>

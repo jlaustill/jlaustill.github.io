@@ -8,7 +8,7 @@ const Home = () => {
         Welcome
       </Typography>
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <CardContent>
               <Typography variant="h5" component="h2">
@@ -25,19 +25,36 @@ const Home = () => {
             </CardActions>
           </Card>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <CardContent>
               <Typography variant="h5" component="h2">
-                Utilities
+                Turbo Calculator
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Useful calculators and tools
+                Compound turbo boost ratio calculator
               </Typography>
             </CardContent>
             <CardActions>
-              <Button component={RouterLink} to="/utils/compound-turbo-calculator">
-                Turbo Calculator
+              <Button component={RouterLink} to="/turbo-calculator">
+                Open Calculator
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h5" component="h2" sx={{ textTransform: 'none' }}>
+                kfa
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                QWERTY phonetic alphabet translator
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button component={RouterLink} to="/kfa">
+                Open Translator
               </Button>
             </CardActions>
           </Card>
