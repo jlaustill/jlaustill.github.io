@@ -14,11 +14,11 @@ interface ITranslationWordProps {
   onPronunciationChange: (newPronunciationIndex: number) => void;
 }
 
-export default function TranslationWord({ 
-  word, 
-  format, 
-  onPronunciationChange 
-}: ITranslationWordProps) {
+const TranslationWord = ({
+  word,
+  format,
+  onPronunciationChange
+}: ITranslationWordProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -119,4 +119,6 @@ export default function TranslationWord({
       )}
     </>
   );
-}
+};
+
+export default TranslationWord;

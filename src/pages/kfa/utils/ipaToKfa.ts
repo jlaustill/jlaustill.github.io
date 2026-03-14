@@ -122,16 +122,16 @@ export function translateIpaToKfa(ipaText: string): ITranslationResult {
   };
 }
 
-export function translateKfaToIpa(kfaText: string): ITranslationResult {
-  // Create reverse mapping (kfa -> IPA)
-  const KFA_TO_IPA_MAP = new Map<string, string>();
-  for (const [ipa, kfa] of IPA_TO_KFA_MAP.entries()) {
-    // Handle multiple IPA symbols mapping to same kfa (like θ and ð both -> T)
-    if (!KFA_TO_IPA_MAP.has(kfa)) {
-      KFA_TO_IPA_MAP.set(kfa, ipa);
-    }
+// Reverse mapping (kfa -> IPA), computed once at module level
+const KFA_TO_IPA_MAP = new Map<string, string>();
+for (const [ipa, kfa] of IPA_TO_KFA_MAP.entries()) {
+  // Handle multiple IPA symbols mapping to same kfa (like θ and ð both -> T)
+  if (!KFA_TO_IPA_MAP.has(kfa)) {
+    KFA_TO_IPA_MAP.set(kfa, ipa);
   }
+}
 
+export function translateKfaToIpa(kfaText: string): ITranslationResult {
   // Use tokenizer for proper phoneme segmentation
   const tokens = tokenizePhonemeText(kfaText, KFA_TO_IPA_MAP);
   const translatedTokens: string[] = [];

@@ -77,7 +77,7 @@ export function tokenizePhonemeText(text: string, phonemeMap: Map<string, string
     // Find longest matching phoneme
     let matched = false;
     for (const phoneme of phonemes) {
-      if (text.substr(currentPos, phoneme.length) === phoneme) {
+      if (text.substring(currentPos, currentPos + phoneme.length) === phoneme) {
         tokens.push(phoneme);
         currentPos += phoneme.length;
         matched = true;

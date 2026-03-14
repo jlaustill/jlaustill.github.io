@@ -9,13 +9,13 @@ interface IEnhancedTranslationDisplayProps {
   onWordPronunciationChange: (wordIndex: number, newPronunciationIndex: number) => void;
 }
 
-export default function EnhancedTranslationDisplay({
+const EnhancedTranslationDisplay = ({
   result,
   format,
   title,
   onWordPronunciationChange
-}: IEnhancedTranslationDisplayProps) {
-  
+}: IEnhancedTranslationDisplayProps) => {
+
   const handlePronunciationChange = (wordIndex: number) => (newPronunciationIndex: number) => {
     onWordPronunciationChange(wordIndex, newPronunciationIndex);
   };
@@ -25,7 +25,7 @@ export default function EnhancedTranslationDisplay({
       <Typography variant="h6" gutterBottom>
         {title}
       </Typography>
-      
+
       <Box
         sx={{
           minHeight: '120px',
@@ -50,9 +50,9 @@ export default function EnhancedTranslationDisplay({
       </Box>
 
       {result.errors && result.errors.length > 0 && (
-        <Typography 
-          variant="caption" 
-          color="warning.main" 
+        <Typography
+          variant="caption"
+          color="warning.main"
           sx={{ mt: 1, display: 'block' }}
         >
           Warnings: {result.errors.join('; ')}
@@ -60,4 +60,6 @@ export default function EnhancedTranslationDisplay({
       )}
     </Box>
   );
-}
+};
+
+export default EnhancedTranslationDisplay;

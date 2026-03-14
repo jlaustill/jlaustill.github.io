@@ -7,10 +7,16 @@ export class DictionaryLoader {
   private dictionary: Record<string, IDictionaryEntry[]> = {};
   private ipaToEnglish = new Map<string, string[]>();
   private isLoaded = false;
+  private loadPromise: Promise<void> | null = null;
 
   async loadDictionary(): Promise<void> {
     if (this.isLoaded) return;
+    if (this.loadPromise) return this.loadPromise;
+    this.loadPromise = this.doLoad();
+    return this.loadPromise;
+  }
 
+  private async doLoad(): Promise<void> {
     try {
       const response = await fetch(`${import.meta.env.BASE_URL}data/ipadict.json`);
       
