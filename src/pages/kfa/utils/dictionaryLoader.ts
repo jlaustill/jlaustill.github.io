@@ -172,7 +172,7 @@ export class DictionaryLoader {
           const sortedPronunciations = [...pronunciations].sort((a, b) => a.priority - b.priority);
           
           // For each pronunciation, find homophones and include them as alternative English words
-          const allPronunciationOptions: any[] = [];
+          const allPronunciationOptions: IWordTranslation['pronunciations'] = [];
           
           for (const entry of sortedPronunciations) {
             const kfaResult = translateIpaToKfa(entry.ipa);

@@ -22,7 +22,7 @@ export default function TranslationWord({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  const handleClick = (event: any) => {
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     if (word.hasMultiplePronunciations) {
       event.stopPropagation(); // Prevent bubbling to parent edit handler
       setAnchorEl(event.currentTarget);
@@ -33,7 +33,7 @@ export default function TranslationWord({
     setAnchorEl(null);
   };
 
-  const handleSelect = (pronunciationIndex: number) => (event: any) => {
+  const handleSelect = (pronunciationIndex: number) => (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation(); // Prevent bubbling to parent edit handler
     onPronunciationChange(pronunciationIndex);
     handleClose();
