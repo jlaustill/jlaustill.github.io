@@ -4,15 +4,15 @@ import { tokenizePhonemeText } from "./tokenizer";
 // IPA to kfa mappings based on your README
 const IPA_TO_KFA_MAP = new Map<string, string>([
   // Vowels (sorted by length - longest first to avoid partial matches)
-  ['əʊ', 'uO'],  // Long O (go)
-  ['ow', 'uO'],  // Long O variant (don't)
+  ['əʊ', 'uU'],  // Long O (go)
+  ['ow', 'uU'],  // Long O variant (don't)
   ['aɪ', 'uy'],  // Long I (my) - standard IPA
   ['aj', 'uy'],  // Long I (my) - dictionary variant
   ['eɪ', 'ay'],  // Long A (day) - standard IPA
   ['ej', 'ay'],  // Long A (day) - dictionary variant
   ['aʊ', 'aO'],  // OW sound (now)
   ['aw', 'aO'],  // OW sound variant (how)
-  ['uʌ', 'Ou'],  // OW sound variant (Joshua)
+  ['uʌ', 'Uu'],  // OW sound variant (Joshua)
   ['ɪə', 'ir'],  // EER sound (here)
   ['eə', 'er'],  // AIR sound (hair)
   ['ʊə', 'ur'],  // UUR sound (sure)
@@ -23,8 +23,8 @@ const IPA_TO_KFA_MAP = new Map<string, string>([
   ['siˈɪ', 'syy'], // Long E with s and stress followed by Long E (seeing)
   ['siˈ', 'sy'], // Long E with s and stress (seeing)
   ['ɜː', 'ur'],  // UR sound (bird)
-  ['uː', 'O'],   // Long U (moon)
-  ['uˈ', 'O'],   // Long U with stress (into)
+  ['uː', 'U'],   // Long U (moon)
+  ['uˈ', 'U'],   // Long U with stress (into)
   ['ɑː', 'o'],   // Long A (car)
   ['ɔː', 'o'],   // Long O (saw)
   ['wɚ', 'wur'], // R-colored schwa with w (work)
@@ -42,7 +42,7 @@ const IPA_TO_KFA_MAP = new Map<string, string>([
   ['ɒ', 'o'],    // Short O (hot)
   ['ɔ', 'o'],    // Short O variant (your)
   ['ɑ', 'o'],    // Father/LOT vowel (not, Joshua)
-  ['ʊ', 'U'],    // Short U (book)
+  ['ʊ', 'O'],    // Short U (book)
   
   // Consonants
   ['dʒ', 'J'],   // J sound (jump) - two character version
