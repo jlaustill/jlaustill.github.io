@@ -72,6 +72,7 @@ const IPA_TO_KFA_MAP = new Map<string, string>([
   ['h', 'h'],    // H sound
   ['j', 'j'],    // Y sound
   ['g', 'g'],    // G sound
+  ['ɡ', 'g'],    // G sound (IPA voiced velar plosive variant)
 ]);
 
 export function translateIpaToKfa(ipaText: string): ITranslationResult {
