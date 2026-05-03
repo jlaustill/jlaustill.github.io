@@ -178,6 +178,18 @@ All 44 English phonemes successfully mapped using only QWERTY keyboard letters!
 **kfa:**
 "for skor and sevun yirz ugo aOr foTurz brot forT on Tis kontunint, u nU naysun, kunsyvd in libirty, and dedukayted tU Tu propuZiSun Tat ol men or kryayted ykwul."
 
+## Demonstration: U vs O — Long and Short OO
+
+English uses "oo" for two distinct sounds. kfa disambiguates them clearly: **U** = long oo (/uː/), **O** = short oo (/ʊ/).
+
+**English:**
+"Take a look at the good book for a cool recipe for moon pie, it's one of my favorite foods."
+
+**kfa:**
+"tayk u lOk at Tu gOd bOk for u kUl resupy for mUn puy, its wun uv muy fayvurit fUdz."
+
+Notice: **lOk, gOd, bOk** (short oo) vs **kUl, mUn, fUdz** (long oo) — readable at a glance.
+
 ## Demonstration: Eliminating English Spelling Confusion
 
 **English:**
