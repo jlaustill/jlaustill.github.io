@@ -176,7 +176,7 @@ All 44 English phonemes successfully mapped using only QWERTY keyboard letters!
 "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal."
 
 **kfa:**
-"for skor and sevun yirz ugo aOr foTurz brot forT on Tis kontunint, u nU naysun, kunsyvd in libirty, and dedukayted tU Tu propuZiSun Tat ol men or kryayted ykwul."
+"for skor and sevun yirz uguU aOr foTurz brot forT on Tis kontunint, u nU naysun, kunsyvd in libirty, and dedukayted tU Tu propuZiSun Tat ol men or kryayted ykwul."
 
 ## Demonstration: U vs O — Long and Short OO
 
@@ -186,7 +186,7 @@ English uses "oo" for two distinct sounds. kfa disambiguates them clearly: **U**
 "Take a look at the good book for a cool recipe for moon pie, it's one of my favorite foods."
 
 **kfa:**
-"tayk u lOk at Tu gOd bOk for u kUl resupy for mUn puy, its wun uv muy fayvurit fUdz."
+"tayk u lOk at Tu gOd bOk for u kUl resupy for mUn puy, its wun uv muy fayvrit fUdz."
 
 Notice: **lOk, gOd, bOk** (short oo) vs **kUl, mUn, fUdz** (long oo) — readable at a glance.
 
