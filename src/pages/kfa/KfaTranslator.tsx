@@ -130,7 +130,7 @@ kfa prioritizes **meaning-making sound differences** over academic phonetic prec
 | ʊ | O | Short U | 0.43% | book/bOk | good/gOd | put/pOt |
 | ɪə | ir | EER sound | 0.30% | here/hir | beer/bir | deer/dir |
 | eə | er | AIR sound | 0.25% | hair/her | care/ker | bear/ber |
-| ʊə | ur | UUR sound | 0.15% | sure/Sur | cure/kjur | pure/pjur |
+| ʊə | ur | UUR sound | 0.15% | sure/Sur | cure/kYur | pure/pYur |
 | ɔɪ | oy | OY sound | 0.10% | boy/boy | coin/koyn | voice/voys |
 
 ### Consonants (24 sounds)
@@ -145,8 +145,8 @@ kfa prioritizes **meaning-making sound differences** over academic phonetic prec
 | l | l | L sound | 3.96% | love/luv | yellow/YeluU | call/kol |
 | k | k | K sound | 3.18% | key/ky | school/skUl | book/bOk |
 | ð | T | TH (this) | 2.95% | this/Tis | mother/muTur | breathe/bryT |
-| m | m | M sound | 2.76% | man/man | summer/sumur | time/teym |
-| z | z | Z sound | 2.76% | zoo/zU | music/mYUzik | eyes/oyz |
+| m | m | M sound | 2.76% | man/man | summer/sumur | time/tuym |
+| z | z | Z sound | 2.76% | zoo/zU | music/mYUzik | eyes/uyz |
 | p | p | P sound | 2.15% | pen/pen | happy/hapy | cup/kup |
 | v | v | V sound | 2.01% | very/very | river/rivur | love/luv |
 | w | w | W sound | 1.95% | water/wotur | away/uway | quick/kwik |
@@ -154,7 +154,7 @@ kfa prioritizes **meaning-making sound differences** over academic phonetic prec
 | f | f | F sound | 1.71% | fish/fiS | coffee/kofy | leaf/lyf |
 | h | h | H sound | 1.40% | house/haOs | perhaps/purhaps | hello/heluU |
 | ŋ | ng | NG sound | 0.99% | sing/syng | thinking/Tyngkyng | long/long |
-| ʃ | S | SH sound | 0.97% | ship/Sip | washing/woSyG | fish/fiS |
+| ʃ | S | SH sound | 0.97% | ship/Sip | washing/woSyng | fish/fiS |
 | j | Y | Y sound | 0.81% | yes/Yes | music/mYUzik | few/fYU |
 | g | g | G sound | 0.80% | go/guU | bigger/bigur | bag/bag |
 | dʒ | j | J sound | 0.59% | jump/jump | magic/majik | bridge/brij |
