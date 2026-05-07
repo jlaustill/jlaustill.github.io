@@ -142,11 +142,11 @@ kfa prioritizes **meaning-making sound differences** over academic phonetic prec
 | t | t | T sound | 6.91% | ten/ten | better/betur | cat/kat |
 | s | s | S sound | 4.75% | sun/sun | lesson/lesun | bus/bus |
 | d | d | D sound | 4.21% | dog/dog | ladder/ladur | red/red |
-| l | l | L sound | 3.96% | love/luv | yellow/jeluU | call/kol |
+| l | l | L sound | 3.96% | love/luv | yellow/YeluU | call/kol |
 | k | k | K sound | 3.18% | key/ky | school/skUl | book/bOk |
 | ð | T | TH (this) | 2.95% | this/Tis | mother/muTur | breathe/bryT |
 | m | m | M sound | 2.76% | man/man | summer/sumur | time/teym |
-| z | z | Z sound | 2.76% | zoo/zU | music/mjUzik | eyes/oyz |
+| z | z | Z sound | 2.76% | zoo/zU | music/mYUzik | eyes/oyz |
 | p | p | P sound | 2.15% | pen/pen | happy/hapy | cup/kup |
 | v | v | V sound | 2.01% | very/very | river/rivur | love/luv |
 | w | w | W sound | 1.95% | water/wotur | away/uway | quick/kwik |
@@ -155,7 +155,7 @@ kfa prioritizes **meaning-making sound differences** over academic phonetic prec
 | h | h | H sound | 1.40% | house/haOs | perhaps/purhaps | hello/heluU |
 | ŋ | ng | NG sound | 0.99% | sing/syng | thinking/Tyngkyng | long/long |
 | ʃ | S | SH sound | 0.97% | ship/Sip | washing/woSyG | fish/fiS |
-| j | j | Y sound | 0.81% | yes/jes | music/mjUzik | few/fjU |
+| j | Y | Y sound | 0.81% | yes/Yes | music/mYUzik | few/fYU |
 | g | g | G sound | 0.80% | go/guU | bigger/bigur | bag/bag |
 | dʒ | J | J sound | 0.59% | jump/Jump | magic/maJik | bridge/briJ |
 | tʃ | c | CH sound | 0.56% | chair/cer | teacher/tycer | watch/woc |
@@ -176,7 +176,7 @@ All 44 English phonemes successfully mapped using only QWERTY keyboard letters!
 "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal."
 
 **kfa:**
-"for skor and sevun yirz uguU aOr foTurz brot forT on Tis kontunint, u nU naysun, kunsyvd in libirty, and dedukayted tU Tu propuZiSun Tat ol men or kryayted ykwul."
+"for skor and sevun Yirz uguU aOr foTurz brot forT on Tis kontunint, u nU naysun, kunsyvd in libirty, and dedukayted tU Tu propuZiSun Tat ol men or kryayted ykwul."
 
 ## Demonstration: U vs O — Long and Short OO
 
@@ -196,12 +196,12 @@ Notice: **lOk, gOd, bOk** (short oo) vs **kUl, mUn, fUdz** (long oo) — readabl
 "Which witch is which? They're at their house over there! Your dog ate you're dinner, but you're not sure whose dog it was or who's coming to dinner."
 
 **kfa:**
-"wic wic iz wic? Ter at Ter haOs uUvur Ter! jOr dog ayt jOr dinur, but jOr not Sur hUz dog it waz or hUz kumyng tU dinur."
+"wic wic iz wic? Ter at Ter haOs uUvur Ter! YOr dog ayt YOr dinur, but YOr not Sur hUz dog it waz or hUz kumyng tU dinur."
 
 This example showcases one of kfa's most powerful features: eliminating the confusion caused by English's inconsistent spelling. Notice how:
 - **which/witch** = both 'wic' (identical pronunciation, identical spelling)
 - **they're/their/there** = all 'Ter' (same sound, same spelling)
-- **your/you're** = both 'jOr' (phonetically identical)
+- **your/you're** = both 'YOr' (phonetically identical)
 - **whose/who's** = both 'hUz' (eliminates arbitrary apostrophe confusion)
 
 The kfa system represents how words actually sound, not their historical spelling accidents, making it invaluable for language learners and eliminating common English spelling confusion.`;

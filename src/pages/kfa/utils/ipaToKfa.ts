@@ -70,7 +70,7 @@ const IPA_TO_KFA_MAP = new Map<string, string>([
   ['b', 'b'],    // B sound
   ['f', 'f'],    // F sound
   ['h', 'h'],    // H sound
-  ['j', 'j'],    // Y sound
+  ['j', 'Y'],    // Y sound
   ['g', 'g'],    // G sound
   ['ɡ', 'g'],    // G sound (IPA voiced velar plosive variant)
 ]);
