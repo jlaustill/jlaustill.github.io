@@ -45,8 +45,8 @@ const IPA_TO_KFA_MAP = new Map<string, string>([
   ['ʊ', 'O'],    // Short U (book)
   
   // Consonants
-  ['dʒ', 'J'],   // J sound (jump) - two character version
-  ['ʤ', 'J'],    // J sound (jump) - single character version
+  ['dʒ', 'j'],   // J sound (jump) - two character version
+  ['ʤ', 'j'],    // J sound (jump) - single character version
   ['tʃ', 'c'],   // CH sound (chair) - two character version
   ['ʧ', 'c'],    // CH sound (chair) - single character version
   ['ʃ', 'S'],    // SH sound (ship)

@@ -9,7 +9,7 @@ const AppLayout = ({ children }: ILayoutProps) => {
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             <RouterLink to="/" style={{ color: 'inherit', textDecoration: 'none' }}>
-              JoSUu ostel
+              joSUu ostel
             </RouterLink>
           </Typography>
           <Button color="inherit" component={RouterLink} to="/">

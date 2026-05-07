@@ -113,7 +113,7 @@ kfa prioritizes **meaning-making sound differences** over academic phonetic prec
 | IPA | kfa | Sound Description | Frequency | Example 1 | Example 2 | Example 3 |
 |-----|-----|-------------------|-----------|-----------|-----------|-----------|
 | ə | u | Schwa | 11.49% | about/ubaOt | sofa/suUfu | banana/bunanu |
-| ɪ | i | Short I | 6.32% | bit/bit | ship/Sip | gym/Jim |
+| ɪ | i | Short I | 6.32% | bit/bit | ship/Sip | gym/jim |
 | iː | y | Long E | 3.61% | see/sy | tree/try | key/ky |
 | ɜː | ur | UR sound | 2.86% | bird/burd | word/wurd | nurse/nurs |
 | æ | a | Short A | 2.10% | cat/kat | bat/bat | hand/hand |
@@ -150,14 +150,14 @@ kfa prioritizes **meaning-making sound differences** over academic phonetic prec
 | p | p | P sound | 2.15% | pen/pen | happy/hapy | cup/kup |
 | v | v | V sound | 2.01% | very/very | river/rivur | love/luv |
 | w | w | W sound | 1.95% | water/wotur | away/uway | quick/kwik |
-| b | b | B sound | 1.80% | book/bOk | table/taybul | job/Job |
+| b | b | B sound | 1.80% | book/bOk | table/taybul | job/job |
 | f | f | F sound | 1.71% | fish/fiS | coffee/kofy | leaf/lyf |
 | h | h | H sound | 1.40% | house/haOs | perhaps/purhaps | hello/heluU |
 | ŋ | ng | NG sound | 0.99% | sing/syng | thinking/Tyngkyng | long/long |
 | ʃ | S | SH sound | 0.97% | ship/Sip | washing/woSyG | fish/fiS |
 | j | Y | Y sound | 0.81% | yes/Yes | music/mYUzik | few/fYU |
 | g | g | G sound | 0.80% | go/guU | bigger/bigur | bag/bag |
-| dʒ | J | J sound | 0.59% | jump/Jump | magic/maJik | bridge/briJ |
+| dʒ | j | J sound | 0.59% | jump/jump | magic/majik | bridge/brij |
 | tʃ | c | CH sound | 0.56% | chair/cer | teacher/tycer | watch/woc |
 | θ | T | TH (thin) | 0.41% | think/Tyngk | nothing/nuTyng | path/paT |
 | ʒ | Z | ZH sound | 0.07% | pleasure/pleZur | vision/viZun | measure/meZur |
