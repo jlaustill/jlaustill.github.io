@@ -7,6 +7,7 @@ import {
   Link,
 } from '@mui/material';
 import { useState, useRef } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import TranslationService from './services/translationService';
 import type { IEnhancedTranslationResult } from './types';
 import EnhancedTranslationDisplay from './components/EnhancedTranslationDisplay';
@@ -224,6 +225,10 @@ The kfa system represents how words actually sound, not their historical spellin
           QWERTY Phonetic Alphabet —{' '}
           <Link href="https://github.com/jlaustill/kfa" target="_blank" rel="noopener noreferrer">
             GitHub
+          </Link>
+          {' '}—{' '}
+          <Link component={RouterLink} to="/kfa/examples/raven">
+            Tu rayvun
           </Link>
         </Typography>
 

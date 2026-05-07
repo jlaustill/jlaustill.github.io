@@ -8,6 +8,7 @@ import BlogPost from './pages/blog/BlogPost';
 import CompoundTurboCalculator from './pages/turbo-calculator/CompoundTurboCalculator';
 
 const KfaTranslator = lazy(() => import('./pages/kfa/KfaTranslator'));
+const KfaRaven = lazy(() => import('./pages/kfa/examples/KfaRaven'));
 
 const App = () => {
   return (
@@ -28,6 +29,20 @@ const App = () => {
               }
             >
               <KfaTranslator />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/kfa/examples/raven"
+          element={
+            <Suspense
+              fallback={
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                  <CircularProgress />
+                </Box>
+              }
+            >
+              <KfaRaven />
             </Suspense>
           }
         />
