@@ -13,7 +13,19 @@ import {
 } from '@mui/material';
 import { defaults, TCountryKey, TSectorKey, TSpectrumDefaults } from './data/defaults';
 
-const COUNTRIES: { key: TCountryKey; flag: string; color: string; name: string }[] = [
+interface ICountry {
+  key: TCountryKey;
+  flag: string;
+  color: string;
+  name: string;
+}
+
+interface ISector {
+  key: TSectorKey;
+  label: string;
+}
+
+const COUNTRIES: ICountry[] = [
   { key: 'us',        flag: '🇺🇸', color: '#e53935', name: 'United States' },
   { key: 'canada',    flag: '🇨🇦', color: '#43a047', name: 'Canada' },
   { key: 'germany',   flag: '🇩🇪', color: '#fb8c00', name: 'Germany' },
@@ -22,7 +34,7 @@ const COUNTRIES: { key: TCountryKey; flag: string; color: string; name: string }
   { key: 'singapore', flag: '🇸🇬', color: '#f4511e', name: 'Singapore' },
 ];
 
-const SECTORS: { key: TSectorKey; label: string }[] = [
+const SECTORS: ISector[] = [
   { key: 'healthcare',            label: '🏥 Healthcare' },
   { key: 'fireAndPolice',         label: '🚒 Fire & Police' },
   { key: 'education',             label: '🎓 Education' },
@@ -92,7 +104,7 @@ const EconSpectrum = () => {
                 {COUNTRIES.map(country => (
                   <TableCell key={country.key} sx={{ px: 1, py: 1 }}>
                     <Slider
-                      aria-label={`${country.key} ${sector.label}`}
+                      aria-label={`${country.name} ${sector.label.replace(/^\S+\s/, '')}`}
                       min={0}
                       max={100}
                       value={values[sector.key][country.key]}
