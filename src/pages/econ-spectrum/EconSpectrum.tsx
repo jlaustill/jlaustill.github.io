@@ -9,9 +9,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { defaults, TCountryKey, TSectorKey, TSpectrumDefaults } from './data/defaults';
+import { descriptions } from './data/descriptions';
 
 interface ICountry {
   key: TCountryKey;
@@ -77,8 +79,9 @@ const EconSpectrum = () => {
             <TableRow sx={{ background: '#1e1e2e' }}>
               <TableCell sx={{ color: '#fff', fontWeight: 600, width: 180 }}>Sector</TableCell>
               {COUNTRIES.map(c => (
-                <TableCell key={c.key} align="center" sx={{ color: '#fff', fontSize: '1.4rem' }}>
-                  <span role="img" aria-label={c.name}>{c.flag}</span>
+                <TableCell key={c.key} align="center" sx={{ color: '#fff' }}>
+                  <span role="img" aria-label={c.name} style={{ fontSize: '1.4rem' }}>{c.flag}</span>
+                  <div style={{ fontSize: '0.7rem', marginTop: 2 }}>{c.name}</div>
                 </TableCell>
               ))}
             </TableRow>
@@ -103,16 +106,22 @@ const EconSpectrum = () => {
                 </TableCell>
                 {COUNTRIES.map(country => (
                   <TableCell key={country.key} sx={{ px: 1, py: 1 }}>
-                    <Slider
-                      aria-label={`${country.name} ${sector.label.replace(/^\S+\s/, '')}`}
-                      min={0}
-                      max={100}
-                      value={values[sector.key][country.key]}
-                      onChange={(_, val) =>
-                        handleChange(sector.key, country.key, val as number)
-                      }
-                      sx={{ color: country.color, display: 'block' }}
-                    />
+                    <Tooltip
+                      title={descriptions[sector.key][country.key]}
+                      placement="top"
+                      arrow
+                    >
+                      <Slider
+                        aria-label={`${country.name} ${sector.label.replace(/^\S+\s/, '')}`}
+                        min={0}
+                        max={100}
+                        value={values[sector.key][country.key]}
+                        onChange={(_, val) =>
+                          handleChange(sector.key, country.key, val as number)
+                        }
+                        sx={{ color: country.color, display: 'block' }}
+                      />
+                    </Tooltip>
                   </TableCell>
                 ))}
               </TableRow>
