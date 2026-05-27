@@ -29,6 +29,9 @@ const AppLayout = ({ children }: ILayoutProps) => {
           >
             kfa
           </Button>
+          <Button color="inherit" component={RouterLink} to="/econ-spectrum">
+            Econ Spectrum
+          </Button>
         </Toolbar>
       </AppBar>
       <Container component="main" sx={{ flex: 1, py: 3 }}>

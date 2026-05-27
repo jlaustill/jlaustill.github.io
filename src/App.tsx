@@ -9,6 +9,7 @@ import CompoundTurboCalculator from './pages/turbo-calculator/CompoundTurboCalcu
 
 const KfaTranslator = lazy(() => import('./pages/kfa/KfaTranslator'));
 const KfaRaven = lazy(() => import('./pages/kfa/examples/KfaRaven'));
+const EconSpectrum = lazy(() => import('./pages/econ-spectrum/EconSpectrum'));
 
 const App = () => {
   return (
@@ -43,6 +44,20 @@ const App = () => {
               }
             >
               <KfaRaven />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/econ-spectrum"
+          element={
+            <Suspense
+              fallback={
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                  <CircularProgress />
+                </Box>
+              }
+            >
+              <EconSpectrum />
             </Suspense>
           }
         />

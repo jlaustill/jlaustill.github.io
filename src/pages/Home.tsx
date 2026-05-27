@@ -59,6 +59,23 @@ const Home = () => {
             </CardActions>
           </Card>
         </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h5" component="h2">
+                Econ Spectrum
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Capitalism vs. socialism by country and sector
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button component={RouterLink} to="/econ-spectrum">
+                View Spectrum
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
       </Grid>
     </>
   );
