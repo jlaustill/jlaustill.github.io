@@ -13,13 +13,13 @@ import {
 } from '@mui/material';
 import { defaults, TCountryKey, TSectorKey, TSpectrumDefaults } from './data/defaults';
 
-const COUNTRIES: { key: TCountryKey; flag: string; color: string }[] = [
-  { key: 'us',        flag: '🇺🇸', color: '#e53935' },
-  { key: 'canada',    flag: '🇨🇦', color: '#43a047' },
-  { key: 'germany',   flag: '🇩🇪', color: '#fb8c00' },
-  { key: 'china',     flag: '🇨🇳', color: '#00acc1' },
-  { key: 'cuba',      flag: '🇨🇺', color: '#8e24aa' },
-  { key: 'singapore', flag: '🇸🇬', color: '#f4511e' },
+const COUNTRIES: { key: TCountryKey; flag: string; color: string; name: string }[] = [
+  { key: 'us',        flag: '🇺🇸', color: '#e53935', name: 'United States' },
+  { key: 'canada',    flag: '🇨🇦', color: '#43a047', name: 'Canada' },
+  { key: 'germany',   flag: '🇩🇪', color: '#fb8c00', name: 'Germany' },
+  { key: 'china',     flag: '🇨🇳', color: '#00acc1', name: 'China' },
+  { key: 'cuba',      flag: '🇨🇺', color: '#8e24aa', name: 'Cuba' },
+  { key: 'singapore', flag: '🇸🇬', color: '#f4511e', name: 'Singapore' },
 ];
 
 const SECTORS: { key: TSectorKey; label: string }[] = [
@@ -66,7 +66,7 @@ const EconSpectrum = () => {
               <TableCell sx={{ color: '#fff', fontWeight: 600, width: 180 }}>Sector</TableCell>
               {COUNTRIES.map(c => (
                 <TableCell key={c.key} align="center" sx={{ color: '#fff', fontSize: '1.4rem' }}>
-                  {c.flag}
+                  <span role="img" aria-label={c.name}>{c.flag}</span>
                 </TableCell>
               ))}
             </TableRow>
@@ -92,6 +92,7 @@ const EconSpectrum = () => {
                 {COUNTRIES.map(country => (
                   <TableCell key={country.key} sx={{ px: 1, py: 1 }}>
                     <Slider
+                      aria-label={`${country.key} ${sector.label}`}
                       min={0}
                       max={100}
                       value={values[sector.key][country.key]}
