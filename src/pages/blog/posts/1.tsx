@@ -1,13 +1,5 @@
 import { Typography, Box, Paper, Divider, Link } from '@mui/material';
-
-const Ref = ({ id, children }: { id: number; children?: React.ReactNode }) => (
-  <sup>
-    <Link href={`#ref-${id}`} underline="hover" sx={{ fontSize: '0.75rem' }}>
-      [{id}]
-    </Link>
-    {children}
-  </sup>
-);
+import Ref from '../components/Ref';
 
 const Post1 = () => {
   return (
