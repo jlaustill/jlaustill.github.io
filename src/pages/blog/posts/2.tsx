@@ -1,13 +1,5 @@
 import { Typography, Box, Paper, Divider, Link } from '@mui/material';
-
-const Ref = ({ id, children }: { id: number; children?: React.ReactNode }) => (
-  <sup>
-    <Link href={`#ref-${id}`} underline="hover" sx={{ fontSize: '0.75rem' }}>
-      [{id}]
-    </Link>
-    {children}
-  </sup>
-);
+import Ref from '../components/Ref';
 
 const Post2 = () => {
   return (
@@ -182,13 +174,13 @@ const Post2 = () => {
       </Typography>
       <Typography variant="body1" paragraph>
         It's tempting to think of AI the way we think of an app: write the code, ship it, done.
-        Frontier AI doesn't work that way. Analysts project roughly $7.6 trillion in capital spending
-        on AI compute, data centers, and power between 2026 and 2031, with hyperscaler AI capital
-        expenditure alone jumping from around $410 billion in 2025 toward $700 billion-plus in 2026
-        <Ref id={9} />. Global data-center electricity consumption is on track to nearly double, from
-        about 485 terawatt-hours in 2025 to roughly 950 terawatt-hours by 2030<Ref id={10} /> —
-        and the binding constraint on how fast AI can scale is increasingly the power grid, not chip
-        supply<Ref id={11} />.
+        Frontier AI doesn't work that way. Analysts project roughly $7.6 trillion in cumulative
+        capital spending on AI compute, data centers, and power between 2026 and 2031, with annual
+        hyperscaler AI capital expenditure alone projected to grow from around $765 billion in 2026
+        to $1.6 trillion by 2031<Ref id={9} />. Global data-center electricity consumption is on
+        track to more than double, from about 415 terawatt-hours in 2024 to roughly 945
+        terawatt-hours by 2030<Ref id={10} /> — and the binding constraint on how fast AI can scale
+        is increasingly the power grid, not chip supply<Ref id={11} />.
       </Typography>
       <Typography variant="body1" paragraph>
         That reframes what "AI capability" actually means. It isn't purely a software or algorithms
