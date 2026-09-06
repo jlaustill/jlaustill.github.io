@@ -16,6 +16,7 @@
     "@mui/material": "^7.3.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.10.1",
     "recharts": "^2.15.1"
   },
