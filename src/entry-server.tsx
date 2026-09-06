@@ -31,12 +31,20 @@ export interface IRenderResult {
 
 // react-helmet-async 3.0.0 detects React 19 at runtime and, on React 19,
 // makes `HelmetProvider`'s `context` prop a no-op: `<Helmet>` instead renders
-// real `<title>`/`<meta>` elements and lets React 19's native document-metadata
-// hoisting move them to the front of the `renderToString()` output (this is
-// documented behavior, not a bug — see react-helmet-async's README "React 19"
-// section). So instead of reading `context.helmet`, pull the hoisted tags back
-// off the front of the rendered string.
-const leadingHeadTagPattern = /^(<title[^>]*>[\s\S]*?<\/title>|<meta[^>]*\/?>)/;
+// real head-only elements (`<title>`, `<meta>`, `<link>`, `<style>`, `<script>`)
+// and lets React 19's native document-metadata hoisting move them to the front
+// of the `renderToString()` output (this is documented behavior, not a bug —
+// see react-helmet-async's README "React 19" section). So instead of reading
+// `context.helmet`, pull the hoisted tags back off the front of the rendered
+// string. `<link>` is void (self-closing); `<style>`/`<script>` are not, so
+// they need a matching close tag.
+const leadingHeadTagPattern =
+  /^(<title[^>]*>[\s\S]*?<\/title>|<meta[^>]*\/?>|<link[^>]*\/?>|<style[^>]*>[\s\S]*?<\/style>|<script[^>]*>[\s\S]*?<\/script>)/;
+
+// Guards the extraction above: if a future head tag type (or malformed markup)
+// isn't matched by leadingHeadTagPattern, this catches it loudly instead of
+// letting a head-only tag silently leak into the body html.
+const leadingHeadTagNamePattern = /^<(title|meta|link|style|script)\b/i;
 
 function splitHoistedHeadTags(html: string): { helmetTags: string; bodyHtml: string } {
   let bodyHtml = html;
@@ -69,6 +77,12 @@ export function render(url: string): IRenderResult {
   const { helmetTags, bodyHtml } = splitHoistedHeadTags(rawHtml);
   if (!helmetTags.includes('<title>')) {
     throw new Error(`No title tag hoisted by react-helmet-async for route: ${url}`);
+  }
+  if (leadingHeadTagNamePattern.test(bodyHtml)) {
+    throw new Error(
+      `A head-only tag leaked into body html for route: ${url} — leadingHeadTagPattern ` +
+        'needs to be extended to cover it.',
+    );
   }
 
   const chunks = extractCriticalToChunks(bodyHtml);
