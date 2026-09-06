@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
-import ReactDOMServer from 'react-dom/server';
+import { renderToPipeableStream } from 'react-dom/server';
+import { Writable } from 'node:stream';
 import { StaticRouter } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { CacheProvider } from '@emotion/react';
@@ -58,8 +59,40 @@ function splitHoistedHeadTags(html: string): { helmetTags: string; bodyHtml: str
   return { helmetTags, bodyHtml };
 }
 
-export function render(url: string): IRenderResult {
-  const rawHtml = ReactDOMServer.renderToString(
+// `renderToString` cannot wait for `React.lazy`/`Suspense` boundaries to
+// resolve — it synchronously renders whatever is available and emits the
+// Suspense fallback for anything still pending, which for a dynamic
+// `import()` is always still pending. Several routes (turbo-calculator, kfa,
+// kfa/examples/raven, econ-spectrum) lazy-load their page component, so
+// `renderToString` would prerender nothing but the loading spinner for them.
+// `renderToPipeableStream`'s `onAllReady` callback waits for every Suspense
+// boundary — including lazy components — to finish before we read the HTML,
+// which is what a build-time prerender (as opposed to a streaming HTTP
+// response) should always do.
+function renderToStringAsync(element: React.ReactElement): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    const writable = new Writable({
+      write(chunk: Buffer, _encoding, callback) {
+        chunks.push(Buffer.from(chunk));
+        callback();
+      },
+    });
+    writable.on('finish', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+    writable.on('error', reject);
+
+    const { pipe } = renderToPipeableStream(element, {
+      onAllReady() {
+        pipe(writable);
+      },
+      onShellError: reject,
+      onError: reject,
+    });
+  });
+}
+
+export async function render(url: string): Promise<IRenderResult> {
+  const rawHtml = await renderToStringAsync(
     <StrictMode>
       <CacheProvider value={cache}>
         <HelmetProvider>

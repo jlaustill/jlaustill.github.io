@@ -16,8 +16,8 @@ function outputPathForRoute(route) {
     : join(distDir, route, 'index.html');
 }
 
-function renderPage(route) {
-  const { html, helmetTags, styleTags } = render(route);
+async function renderPage(route) {
+  const { html, helmetTags, styleTags } = await render(route);
   return template
     .replace(/<title>.*?<\/title>/, helmetTags)
     .replace('</head>', `${styleTags}</head>`)
@@ -27,7 +27,7 @@ function renderPage(route) {
 for (const route of routes) {
   const outputPath = outputPathForRoute(route);
   mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, renderPage(route));
+  writeFileSync(outputPath, await renderPage(route));
   console.log(`Prerendered ${route} -> ${outputPath}`);
 }
 
