@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs && node -e \"require('fs').rmSync('dist-ssr',{recursive:true,force:true})\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },
