@@ -1771,7 +1771,7 @@ const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps)
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values }) => (
+      {({ values, handleBlur }) => (
         <Form>
           <Typography variant="h6">Expected Inflows</Typography>
           <FieldArray name="entries">
@@ -1784,7 +1784,10 @@ const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps)
                       size="small"
                       name={`entries.${index}.name`}
                       placeholder="Name"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <Field
                       as={TextField}
@@ -1792,14 +1795,20 @@ const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps)
                       type="number"
                       name={`entries.${index}.amount`}
                       placeholder="Amount"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <Field
                       as={TextField}
                       size="small"
                       type="date"
                       name={`entries.${index}.date`}
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <IconButton
                       aria-label="Remove"
@@ -1868,7 +1877,7 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values }) => (
+      {({ values, handleBlur }) => (
         <Form>
           <Typography variant="h6">Deposits</Typography>
           <FieldArray name="entries">
@@ -1881,7 +1890,10 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
                       size="small"
                       name={`entries.${index}.name`}
                       placeholder="Name"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <Field
                       as={TextField}
@@ -1889,7 +1901,10 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
                       type="number"
                       name={`entries.${index}.amount`}
                       placeholder="Amount"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <Field
                       as={TextField}
@@ -1913,7 +1928,10 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
                       type="number"
                       name={`entries.${index}.day`}
                       placeholder="Day"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <IconButton
                       aria-label="Remove"
@@ -2040,7 +2058,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values }) => (
+      {({ values, handleBlur }) => (
         <Form>
           <Typography variant="h6">Payments &amp; Debts</Typography>
           <FieldArray name="entries">
@@ -2053,7 +2071,10 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                       size="small"
                       name={`entries.${index}.name`}
                       placeholder="Name"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <Field
                       as={TextField}
@@ -2061,7 +2082,10 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                       type="number"
                       name={`entries.${index}.amount`}
                       placeholder="Amount"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <Field
                       as={TextField}
@@ -2069,14 +2093,20 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                       type="number"
                       name={`entries.${index}.day`}
                       placeholder="Day"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <Field
                       as={TextField}
                       size="small"
                       name={`entries.${index}.creditor`}
                       placeholder="Creditor"
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
                     <Field
                       as={TextField}
@@ -2084,8 +2114,16 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                       name={`entries.${index}.note`}
                       placeholder="Note"
                       sx={{ minWidth: 200 }}
-                      onBlur={() => onChange(values.entries)}
+                      onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        handleBlur(e);
+                        onChange(values.entries);
+                      }}
                     />
+                    {entry.pastDue ? (
+                      <Typography variant="body2" color="error">
+                        past due ${entry.pastDue.toFixed(2)}
+                      </Typography>
+                    ) : null}
                     <IconButton
                       aria-label="Remove"
                       onClick={() => {
@@ -2119,10 +2157,38 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
 export default PaymentsEditor;
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+**Two fixes versus an earlier draft of this task, both learned from Task 10's fix round and applied here before they could recur:**
+1. **`onBlur` now calls Formik's own `handleBlur` before `onChange`** on all five fields — same reasoning as Task 10: `<Field as={...}>` spreads Formik's `field` props first, caller's second, so an `onBlur` that skips `handleBlur` silently breaks `touched` state for any future validation UI.
+2. **`pastDue` is restored as a non-editable display** (`entry.pastDue ? <Typography color="error">past due $X.XX</Typography> : null`) — Task 7's read-only version showed it as part of `describePayment`'s output, and an earlier draft of this task's editable rewrite dropped it with nothing replacing it, the same class of regression Task 10 had with `institution`.
+
+- [ ] **Step 3a: Add a regression-guard test for `pastDue`**
+
+Add to the same `describe('PaymentsEditor editing', ...)` block from Step 1:
+
+```tsx
+  it('preserves pastDue in the onChange payload even though it has no editable field', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <PaymentsEditor
+        items={[{ name: 'SoFi Personal Loan', amount: 0, day: 6, pastDue: 1530.64 }]}
+        onChange={handleChange}
+      />,
+    );
+
+    await user.click(screen.getByPlaceholderText('Day'));
+    await user.tab();
+
+    expect(handleChange).toHaveBeenCalledWith([
+      { name: 'SoFi Personal Loan', amount: 0, day: 6, pastDue: 1530.64 },
+    ]);
+  });
+```
+
+- [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -- PaymentsEditor`
-Expected: PASS (2 tests)
+Expected: PASS (3 tests)
 
 - [ ] **Step 5: Full manual test of Phase 4**
 
