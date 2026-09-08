@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import ExpectedInflowsEditor from './ExpectedInflowsEditor';
 
 describe('ExpectedInflowsEditor', () => {
-  it('shows a date when set, and "no date yet" when null', () => {
+  it('renders each entry with its current name, amount, and date', () => {
     render(
       <ExpectedInflowsEditor
         items={[
@@ -14,7 +16,27 @@ describe('ExpectedInflowsEditor', () => {
       />,
     );
 
-    expect(screen.getByText(/Progressive refund: \$300.00 \(no date yet\)/)).toBeInTheDocument();
-    expect(screen.getByText(/Tax refund: \$450.00 \(2026-04-15\)/)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Progressive refund')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('300')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Tax refund')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('450')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('2026-04-15')).toBeInTheDocument();
+  });
+});
+
+describe('ExpectedInflowsEditor editing', () => {
+  it('calls onChange with the updated amount after editing and blurring', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <ExpectedInflowsEditor items={[{ name: 'Refund', amount: 300, date: null }]} onChange={handleChange} />,
+    );
+
+    const amountInput = screen.getByPlaceholderText('Amount');
+    await user.clear(amountInput);
+    await user.type(amountInput, '350');
+    await user.tab();
+
+    expect(handleChange).toHaveBeenCalledWith([{ name: 'Refund', amount: 350, date: null }]);
   });
 });
