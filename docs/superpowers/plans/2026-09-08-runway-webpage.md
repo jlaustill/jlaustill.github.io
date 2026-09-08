@@ -1005,6 +1005,17 @@ describe('generateDepositSchedule', () => {
     );
     expect(result.map((t) => t.date.toString())).toEqual(['2026-09-11', '2026-09-18']);
   });
+
+  it('stops at maxDate for a deposit with neither endDate nor occurrences, instead of looping forever', () => {
+    const start = Temporal.PlainDate.from('2026-09-01');
+    const maxDate = Temporal.PlainDate.from('2026-12-01');
+    const result = generateDepositSchedule(
+      [{ name: 'Paycheck', amount: 1500, frequency: 'monthly', day: 25 }],
+      start,
+      maxDate,
+    );
+    expect(result.map((t) => t.date.toString())).toEqual(['2026-09-25', '2026-10-25', '2026-11-25']);
+  });
 });
 
 describe('generateExpectedInflowTransactions', () => {
@@ -1141,6 +1152,7 @@ export function sumCashOnHand(cashOnHand: ICashOnHandEntry[]): number {
 export function generateDepositSchedule(
   deposits: IDeposit[],
   startDate: Temporal.PlainDate,
+  maxDate: Temporal.PlainDate = startDate.add({ months: 120 }),
 ): IScheduledTransaction[] {
   const scheduled: IScheduledTransaction[] = [];
 
@@ -1153,6 +1165,11 @@ export function generateDepositSchedule(
     let count = 0;
 
     while (true) {
+      // Both endDate and occurrences are optional on IDeposit — an ordinary recurring
+      // deposit with neither (e.g. a paycheck with no end date) has NO break condition
+      // without this maxDate check, and will run until Temporal's date range is exhausted
+      // (measured: ~54 seconds, then a RangeError, on the shipped engine before this fix).
+      if (Temporal.PlainDate.compare(nextDate, maxDate) > 0) break;
       if (endDate && Temporal.PlainDate.compare(nextDate, endDate) > 0) break;
       if (deposit.occurrences !== undefined && count >= deposit.occurrences) break;
 
@@ -1231,9 +1248,10 @@ export function calculateRunwaySchedule(
 ): IRunwaySchedule {
   const startingBalance = sumCashOnHand(runwayData.cashOnHand);
   let balance = startingBalance;
+  const maxDate = today.add({ months: maxMonths });
 
   const deposits = [
-    ...generateDepositSchedule(runwayData.deposits, today),
+    ...generateDepositSchedule(runwayData.deposits, today, maxDate),
     ...generateExpectedInflowTransactions(runwayData.expectedInflows),
   ].sort((a, b) => Temporal.PlainDate.compare(a.date, b.date));
 
@@ -1242,7 +1260,6 @@ export function calculateRunwaySchedule(
     .map((payment) => ({ payment, nextDate: firstDateForPayment(payment, today) }));
 
   const scheduled: IScheduledTransaction[] = [];
-  const maxDate = today.add({ months: maxMonths });
   let depositIndex = 0;
   let stoppedAtName: string | null = null;
   let stoppedAtDate: Temporal.PlainDate | null = null;
@@ -1286,7 +1303,7 @@ export function calculateRunwaySchedule(
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `npm test -- runwayEngine`
-Expected: PASS (12 tests)
+Expected: PASS (13 tests)
 
 - [ ] **Step 6: Commit**
 
