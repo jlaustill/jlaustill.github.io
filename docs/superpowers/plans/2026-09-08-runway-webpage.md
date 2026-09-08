@@ -1201,6 +1201,29 @@ function firstDateForPayment(payment: IPayment, today: Temporal.PlainDate): Temp
   return getNextMonthlyDate(payment.day, today);
 }
 
+// After the reinstatement lump is paid, the resumed recurring payment must fall in a later
+// calendar month than the reinstatement date, never the same month. A plain day+1 advance can
+// land in the same month when the reinstatement date's day-of-month is earlier than the
+// payment's regular due day (e.g. reinstatement on the 1st, due day 13 -> naive advance gives
+// the 13th of that SAME month, only ~12 days after the lump). Real reinstatement terms resume
+// the regular payment schedule starting the month after the catch-up, so when the naive advance
+// would double-bill within the reinstatement month, push to next month's occurrence instead.
+function nextDateForPayment(payment: IPayment, processedDate: Temporal.PlainDate): Temporal.PlainDate {
+  const candidate = getNextMonthlyDate(payment.day, processedDate.add({ days: 1 }));
+
+  if (payment.reinstatementDue) {
+    const reinstatementDate = Temporal.PlainDate.from(payment.reinstatementDue);
+    const wasReinstatementPayment = Temporal.PlainDate.compare(processedDate, reinstatementDate) === 0;
+    const candidateIsSameMonth = candidate.year === processedDate.year && candidate.month === processedDate.month;
+
+    if (wasReinstatementPayment && candidateIsSameMonth) {
+      return getNextMonthlyDate(payment.day, processedDate.add({ months: 1 }));
+    }
+  }
+
+  return candidate;
+}
+
 export function calculateRunwaySchedule(
   runwayData: IRunwayData,
   today: Temporal.PlainDate,
@@ -1248,7 +1271,7 @@ export function calculateRunwaySchedule(
 
     balance -= due;
     scheduled.push({ date: next.nextDate, name: next.payment.name, amount: -due });
-    next.nextDate = getNextMonthlyDate(next.payment.day, next.nextDate.add({ days: 1 }));
+    next.nextDate = nextDateForPayment(next.payment, next.nextDate);
   }
 
   return {
@@ -1263,7 +1286,7 @@ export function calculateRunwaySchedule(
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `npm test -- runwayEngine`
-Expected: PASS (11 tests)
+Expected: PASS (12 tests)
 
 - [ ] **Step 6: Commit**
 
