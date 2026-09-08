@@ -2240,11 +2240,18 @@ Add, after the `load` callback:
   const save = useCallback(async () => {
     if (!handle || !data) return;
     setError(null);
+    let writable: FileSystemWritableFileStream | undefined;
     try {
-      const writable = await handle.createWritable();
+      writable = await handle.createWritable();
       await writable.write(serializeRunwayData(data));
       await writable.close();
     } catch (err) {
+      // If write() rejects after createWritable() already succeeded, the
+      // stream is left neither closed nor aborted -- it still holds a write
+      // lock on the handle, which can make the NEXT save() on this same
+      // handle fail with an unrelated "already has an active writer" error.
+      // Abort it here so a failed save doesn't silently break the retry.
+      await writable?.abort().catch(() => {});
       setError(
         err instanceof Error
           ? `Could not save: ${err.message}. Try opening the file again.`
