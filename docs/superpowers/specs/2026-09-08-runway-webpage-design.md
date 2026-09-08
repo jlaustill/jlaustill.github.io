@@ -32,18 +32,27 @@ Port the `jlaustill/runway` CLI (a financial runway calculator) into a new page 
 
 ## Prerendering constraint (important)
 
-Every route in `routeMeta` — including lazy ones — is rendered to real static HTML at build time via Node SSR (`entry-server.tsx` + `scripts/prerender.mjs`), not just a loading spinner. `window` doesn't exist in that Node environment, so `RunwayPage` guards on it explicitly:
+Every route in `routeMeta` — including lazy ones — is rendered to real static HTML at build time via Node SSR (`entry-server.tsx` + `scripts/prerender.mjs`), not just a loading spinner. `window` doesn't exist in that Node environment. Rather than inlining a raw `typeof window` check in `RunwayPage`, this introduces a small shared hook, `src/hooks/useBrowserSide.ts` — the site's first hook outside a page folder, since the same guard is generically useful to any future page:
 
 ```typescript
+// src/hooks/useBrowserSide.ts
+export function useBrowserSide(): boolean {
+  return typeof window !== 'undefined';
+}
+```
+
+```typescript
+// RunwayPage.tsx
 const RunwayPage = () => {
-  if (typeof window === 'undefined') {
+  const isBrowserSide = useBrowserSide();
+  if (!isBrowserSide) {
     return <RunwaySkeleton />; // static placeholder, no browser API calls
   }
   return <RunwayApp />; // the real component: file picker, hooks, state, everything
 };
 ```
 
-The prerendered/SSR output is `RunwaySkeleton`. Once the client mounts, `typeof window` is defined, so the same component tree renders `RunwayApp` instead on the very next render pass — hydration reconciles this the same way the existing `main.tsx` logic (`hydrateRoot` when the prerendered path matches) already expects a client render to follow the server one. No effects, no manual "am I mounted yet" state needed; the check itself is the guard. No special-case exclusion from prerendering is needed.
+The prerendered/SSR output is `RunwaySkeleton`. Once the client mounts, `useBrowserSide()` returns `true`, so the same component tree renders `RunwayApp` instead on the very next render pass — hydration reconciles this the same way the existing `main.tsx` logic (`hydrateRoot` when the prerendered path matches) already expects a client render to follow the server one. No effects, no manual "am I mounted yet" state needed; the check itself is the guard. No special-case exclusion from prerendering is needed.
 
 ## Data Model
 
@@ -117,8 +126,12 @@ A pure, framework-free port of the CLI's `generateTransactionSchedule`/`generate
 ## Components
 
 ```
+src/hooks/
+└── useBrowserSide.ts               # shared: true once window exists client-side
+
 src/pages/runway/
-├── RunwayPage.tsx                 # top-level: file state, phase wiring
+├── RunwayPage.tsx                 # top-level: useBrowserSide guard, file state, phase wiring
+├── RunwaySkeleton.tsx              # static SSR/prerender placeholder, no browser APIs
 ├── hooks/
 │   └── useRunwayFile.ts           # showOpenFilePicker / createWritable wrapper
 ├── engine/
