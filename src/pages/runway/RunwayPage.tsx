@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { Box, Button, Typography, Alert } from '@mui/material';
+import { Temporal } from '@js-temporal/polyfill';
 import useBrowserSide from '../../hooks/useBrowserSide';
 import useRunwayFile from './hooks/useRunwayFile';
 import RunwaySkeleton from './RunwaySkeleton';
@@ -6,9 +8,16 @@ import CashOnHandEditor from './components/CashOnHandEditor';
 import ExpectedInflowsEditor from './components/ExpectedInflowsEditor';
 import PaymentsEditor from './components/PaymentsEditor';
 import DepositsEditor from './components/DepositsEditor';
+import RunwaySchedule from './components/RunwaySchedule';
+import { calculateRunwaySchedule } from './engine/runwayEngine';
 
 const RunwayApp = () => {
   const { data, error, fileName, load, setData } = useRunwayFile();
+
+  const schedule = useMemo(() => {
+    if (!data) return null;
+    return calculateRunwaySchedule(data, Temporal.Now.plainDateISO());
+  }, [data]);
 
   return (
     <Box>
@@ -47,6 +56,7 @@ const RunwayApp = () => {
             items={data.deposits}
             onChange={(deposits) => setData({ ...data, deposits })}
           />
+          {schedule && <RunwaySchedule schedule={schedule} />}
         </Box>
       )}
     </Box>
