@@ -60,6 +60,17 @@ describe('generateDepositSchedule', () => {
     );
     expect(result.map((t) => t.date.toString())).toEqual(['2026-09-11', '2026-09-18']);
   });
+
+  it('stops at maxDate for a deposit with neither endDate nor occurrences, instead of looping forever', () => {
+    const start = Temporal.PlainDate.from('2026-09-01');
+    const maxDate = Temporal.PlainDate.from('2026-12-01');
+    const result = generateDepositSchedule(
+      [{ name: 'Paycheck', amount: 1500, frequency: 'monthly', day: 25 }],
+      start,
+      maxDate,
+    );
+    expect(result.map((t) => t.date.toString())).toEqual(['2026-09-25', '2026-10-25', '2026-11-25']);
+  });
 });
 
 describe('generateExpectedInflowTransactions', () => {

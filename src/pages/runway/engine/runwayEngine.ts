@@ -51,6 +51,7 @@ export function sumCashOnHand(cashOnHand: ICashOnHandEntry[]): number {
 export function generateDepositSchedule(
   deposits: IDeposit[],
   startDate: Temporal.PlainDate,
+  maxDate: Temporal.PlainDate = startDate.add({ months: 120 }),
 ): IScheduledTransaction[] {
   const scheduled: IScheduledTransaction[] = [];
 
@@ -63,6 +64,11 @@ export function generateDepositSchedule(
     let count = 0;
 
     while (true) {
+      // Both endDate and occurrences are optional on IDeposit — an ordinary recurring
+      // deposit with neither (e.g. a paycheck with no end date) has NO break condition
+      // without this maxDate check, and will run until Temporal's date range is exhausted
+      // (measured: ~54 seconds, then a RangeError, on the shipped engine before this fix).
+      if (Temporal.PlainDate.compare(nextDate, maxDate) > 0) break;
       if (endDate && Temporal.PlainDate.compare(nextDate, endDate) > 0) break;
       if (deposit.occurrences !== undefined && count >= deposit.occurrences) break;
 
@@ -141,9 +147,10 @@ export function calculateRunwaySchedule(
 ): IRunwaySchedule {
   const startingBalance = sumCashOnHand(runwayData.cashOnHand);
   let balance = startingBalance;
+  const maxDate = today.add({ months: maxMonths });
 
   const deposits = [
-    ...generateDepositSchedule(runwayData.deposits, today),
+    ...generateDepositSchedule(runwayData.deposits, today, maxDate),
     ...generateExpectedInflowTransactions(runwayData.expectedInflows),
   ].sort((a, b) => Temporal.PlainDate.compare(a.date, b.date));
 
@@ -152,7 +159,6 @@ export function calculateRunwaySchedule(
     .map((payment) => ({ payment, nextDate: firstDateForPayment(payment, today) }));
 
   const scheduled: IScheduledTransaction[] = [];
-  const maxDate = today.add({ months: maxMonths });
   let depositIndex = 0;
   let stoppedAtName: string | null = null;
   let stoppedAtDate: Temporal.PlainDate | null = null;
