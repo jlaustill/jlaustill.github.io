@@ -11,7 +11,7 @@ import DepositsEditor from './components/DepositsEditor';
 import RunwaySchedule from './components/RunwaySchedule';
 import { calculateRunwaySchedule } from './engine/runwayEngine';
 
-const RunwayApp = () => {
+export const RunwayApp = () => {
   const { data, error, fileName, canSave, load, save, setData } = useRunwayFile();
 
   const schedule = useMemo(() => {
