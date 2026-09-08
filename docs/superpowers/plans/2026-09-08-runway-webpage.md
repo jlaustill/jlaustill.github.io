@@ -1777,7 +1777,7 @@ const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps)
           <FieldArray name="entries">
             {({ push, remove }) => (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {values.entries.map((entry, index) => (
+                {values.entries.map((_entry, index) => (
                   <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     <Field
                       as={TextField}
@@ -1849,7 +1849,7 @@ export default ExpectedInflowsEditor;
 // src/pages/runway/components/DepositsEditor.tsx
 import { Formik, Form, Field, FieldArray } from 'formik';
 import * as Yup from 'yup';
-import { Box, Button, IconButton, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { IDeposit } from '../types/IRunwayData';
 
@@ -1883,7 +1883,7 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
           <FieldArray name="entries">
             {({ push, remove }) => (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {values.entries.map((entry, index) => (
+                {values.entries.map((_entry, index) => (
                   <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     <Field
                       as={TextField}
@@ -1909,18 +1909,19 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
                     <Field
                       as={TextField}
                       select
+                      SelectProps={{ native: true }}
                       size="small"
                       label="Frequency"
                       name={`entries.${index}.frequency`}
-                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                      onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                         const next = values.entries.map((item, i) =>
                           i === index ? { ...item, frequency: event.target.value as 'weekly' | 'monthly' } : item,
                         );
                         onChange(next);
                       }}
                     >
-                      <MenuItem value="weekly">weekly</MenuItem>
-                      <MenuItem value="monthly">monthly</MenuItem>
+                      <option value="weekly">weekly</option>
+                      <option value="monthly">monthly</option>
                     </Field>
                     <Field
                       as={TextField}
@@ -1966,7 +1967,9 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
 export default DepositsEditor;
 ```
 
-Note: the `frequency` `<Field as={TextField} select>` uses Formik's `onChange` directly (not `onBlur`) because MUI's `select` fires a synthetic change event immediately on selection rather than requiring a blur — matching how `userEvent.selectOptions` interacts with it in the test.
+Notes on the `frequency` field:
+- It uses Formik's `onChange` directly (not `onBlur`) because MUI's `select` fires a synthetic change event immediately on selection rather than requiring a blur — matching how `userEvent.selectOptions` interacts with it in the test.
+- **`SelectProps={{ native: true }}` is required, not optional.** Without it, MUI's `TextField select` renders its own custom, non-native dropdown (a `div`-based popup listbox), which `userEvent.selectOptions()` cannot drive — that method requires a real `<select>`/`<option>` DOM structure. `native: true` switches MUI to render an actual `<select>`, and its children must be plain `<option>` tags (not `<MenuItem>`, which doesn't render as `<option>` and would be invisible to a native select). `getByLabelText('Frequency')` still resolves correctly against the native `<select>`, since MUI's native mode still renders a proper associated `<label>`.
 
 - [ ] **Step 6: Run both to verify all tests pass**
 
