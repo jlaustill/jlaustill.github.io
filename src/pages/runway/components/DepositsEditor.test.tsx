@@ -15,7 +15,7 @@ describe('DepositsEditor', () => {
 
     expect(screen.getByDisplayValue('Paycheck')).toBeInTheDocument();
     expect(screen.getByDisplayValue('1500')).toBeInTheDocument();
-    expect(screen.getByText('monthly')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('monthly')).toBeInTheDocument();
     expect(screen.getByDisplayValue('25')).toBeInTheDocument();
   });
 });
