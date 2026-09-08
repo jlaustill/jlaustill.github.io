@@ -29,7 +29,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values, handleBlur }) => (
+      {({ values, handleBlur, setFieldValue }) => (
         <Form>
           <Typography variant="h6">Payments &amp; Debts</Typography>
           <FieldArray name="entries">
@@ -53,6 +53,11 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                       type="number"
                       name={`entries.${index}.amount`}
                       placeholder="Amount"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value;
+                        const parsed = raw === '' ? 0 : Number(raw);
+                        setFieldValue(`entries.${index}.amount`, Number.isNaN(parsed) ? 0 : parsed);
+                      }}
                       onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                         handleBlur(e);
                         onChange(values.entries);
@@ -64,6 +69,11 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                       type="number"
                       name={`entries.${index}.day`}
                       placeholder="Day"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value;
+                        const parsed = raw === '' ? 0 : Number(raw);
+                        setFieldValue(`entries.${index}.day`, Number.isNaN(parsed) ? 0 : parsed);
+                      }}
                       onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                         handleBlur(e);
                         onChange(values.entries);

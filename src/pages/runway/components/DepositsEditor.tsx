@@ -28,7 +28,7 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values, handleBlur }) => (
+      {({ values, handleBlur, handleChange, setFieldValue }) => (
         <Form>
           <Typography variant="h6">Deposits</Typography>
           <FieldArray name="entries">
@@ -52,6 +52,11 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
                       type="number"
                       name={`entries.${index}.amount`}
                       placeholder="Amount"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value;
+                        const parsed = raw === '' ? 0 : Number(raw);
+                        setFieldValue(`entries.${index}.amount`, Number.isNaN(parsed) ? 0 : parsed);
+                      }}
                       onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                         handleBlur(e);
                         onChange(values.entries);
@@ -65,6 +70,7 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
                       label="Frequency"
                       name={`entries.${index}.frequency`}
                       onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                        handleChange(event);
                         const next = values.entries.map((item, i) =>
                           i === index ? { ...item, frequency: event.target.value as 'weekly' | 'monthly' } : item,
                         );
@@ -80,6 +86,11 @@ const DepositsEditor = ({ items, onChange }: IDepositsEditorProps) => {
                       type="number"
                       name={`entries.${index}.day`}
                       placeholder="Day"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value;
+                        const parsed = raw === '' ? 0 : Number(raw);
+                        setFieldValue(`entries.${index}.day`, Number.isNaN(parsed) ? 0 : parsed);
+                      }}
                       onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                         handleBlur(e);
                         onChange(values.entries);

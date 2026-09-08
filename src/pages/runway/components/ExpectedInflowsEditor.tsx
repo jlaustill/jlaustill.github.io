@@ -27,13 +27,13 @@ const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps)
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values, handleBlur }) => (
+      {({ values, handleBlur, setFieldValue }) => (
         <Form>
           <Typography variant="h6">Expected Inflows</Typography>
           <FieldArray name="entries">
             {({ push, remove }) => (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {values.entries.map((_entry, index) => (
+                {values.entries.map((entry, index) => (
                   <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     <Field
                       as={TextField}
@@ -51,6 +51,11 @@ const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps)
                       type="number"
                       name={`entries.${index}.amount`}
                       placeholder="Amount"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value;
+                        const parsed = raw === '' ? 0 : Number(raw);
+                        setFieldValue(`entries.${index}.amount`, Number.isNaN(parsed) ? 0 : parsed);
+                      }}
                       onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                         handleBlur(e);
                         onChange(values.entries);
@@ -61,6 +66,7 @@ const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps)
                       size="small"
                       type="date"
                       name={`entries.${index}.date`}
+                      value={entry.date ?? ''}
                       onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                         handleBlur(e);
                         onChange(values.entries);

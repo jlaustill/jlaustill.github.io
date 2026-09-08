@@ -64,4 +64,25 @@ describe('CashOnHandEditor editing', () => {
       { name: 'Checking', amount: 100, institution: 'Wells Fargo' },
     ]);
   });
+
+  it('does not crash and coerces an emptied amount field to the number 0', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(<CashOnHandEditor items={[{ name: 'Checking', amount: 100 }]} onChange={handleChange} />);
+
+    const amountInput = screen.getByPlaceholderText('Amount');
+    await user.clear(amountInput);
+
+    // Formik's own documented behavior writes '' into values for an emptied number
+    // field. Without coercion at the boundary, `values.entries.reduce((sum, e) =>
+    // sum + e.amount, 0)` becomes the STRING '0' and `.toFixed(2)` throws, crashing
+    // the whole page. Rendering this far without throwing is itself part of the fix.
+    expect(screen.getByText('Total: $0.00')).toBeInTheDocument();
+
+    await user.tab();
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0];
+    expect(lastCall).toEqual([{ name: 'Checking', amount: 0 }]);
+    expect(typeof lastCall[0].amount).toBe('number');
+  });
 });

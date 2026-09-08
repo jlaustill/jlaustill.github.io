@@ -26,7 +26,7 @@ const CashOnHandEditor = ({ items, onChange }: ICashOnHandEditorProps) => {
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values, handleBlur }) => {
+      {({ values, handleBlur, setFieldValue }) => {
         const total = values.entries.reduce((sum, entry) => sum + entry.amount, 0);
         return (
           <Form>
@@ -52,6 +52,11 @@ const CashOnHandEditor = ({ items, onChange }: ICashOnHandEditorProps) => {
                         type="number"
                         name={`entries.${index}.amount`}
                         placeholder="Amount"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const raw = e.target.value;
+                          const parsed = raw === '' ? 0 : Number(raw);
+                          setFieldValue(`entries.${index}.amount`, Number.isNaN(parsed) ? 0 : parsed);
+                        }}
                         onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                           handleBlur(e);
                           onChange(values.entries);

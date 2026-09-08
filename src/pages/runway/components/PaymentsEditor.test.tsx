@@ -57,4 +57,32 @@ describe('PaymentsEditor editing', () => {
       { name: 'SoFi Personal Loan', amount: 0, day: 6, pastDue: 1530.64 },
     ]);
   });
+
+  it('coerces an emptied amount field to the number 0, never a string', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(<PaymentsEditor items={[{ name: 'Rent', amount: 1200, day: 1 }]} onChange={handleChange} />);
+
+    const amountInput = screen.getByPlaceholderText('Amount');
+    await user.clear(amountInput);
+    await user.tab();
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0];
+    expect(lastCall).toEqual([{ name: 'Rent', amount: 0, day: 1 }]);
+    expect(typeof lastCall[0].amount).toBe('number');
+  });
+
+  it('coerces an emptied day field to the number 0, never a string', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(<PaymentsEditor items={[{ name: 'Rent', amount: 1200, day: 1 }]} onChange={handleChange} />);
+
+    const dayInput = screen.getByPlaceholderText('Day');
+    await user.clear(dayInput);
+    await user.tab();
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0];
+    expect(lastCall).toEqual([{ name: 'Rent', amount: 1200, day: 0 }]);
+    expect(typeof lastCall[0].day).toBe('number');
+  });
 });
