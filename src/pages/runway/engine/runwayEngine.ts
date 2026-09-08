@@ -14,8 +14,6 @@ export interface IRunwaySchedule {
   stoppedAtName: string | null;
 }
 
-const WEEKDAY_MAP: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
-
 function clampDayToMonth(year: number, month: number, targetDay: number): number {
   const monthStart = Temporal.PlainDate.from({ year, month, day: 1 });
   return Math.min(targetDay, monthStart.daysInMonth);
@@ -38,7 +36,7 @@ export function getNextMonthlyDate(day: number, after: Temporal.PlainDate): Temp
 }
 
 export function getNextWeeklyDate(dayOfWeek: number, after: Temporal.PlainDate): Temporal.PlainDate {
-  const currentDay = WEEKDAY_MAP[after.toLocaleString('en-US', { weekday: 'short' })];
+  const currentDay = after.dayOfWeek;
   let daysUntil = dayOfWeek - currentDay;
   if (daysUntil <= 0) daysUntil += 7;
   return after.add({ days: daysUntil });
