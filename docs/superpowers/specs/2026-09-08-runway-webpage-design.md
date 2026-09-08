@@ -32,7 +32,18 @@ Port the `jlaustill/runway` CLI (a financial runway calculator) into a new page 
 
 ## Prerendering constraint (important)
 
-Every route in `routeMeta` — including lazy ones — is rendered to real static HTML at build time via Node SSR (`entry-server.tsx` + `scripts/prerender.mjs`), not just a loading spinner. `RunwayPage` must therefore never call browser-only APIs (`showOpenFilePicker`, `window.*`, `localStorage`, feature detection) at module scope or during the initial render body — only inside `useEffect` or event handlers, which never execute during SSR string rendering. Written this way, the server-rendered output is naturally just the "no file loaded yet" initial state, and the existing hydration logic in `main.tsx` (`hydrateRoot` when the prerendered path matches) picks it up normally. No special-case exclusion from prerendering is needed if this constraint is followed.
+Every route in `routeMeta` — including lazy ones — is rendered to real static HTML at build time via Node SSR (`entry-server.tsx` + `scripts/prerender.mjs`), not just a loading spinner. `window` doesn't exist in that Node environment, so `RunwayPage` guards on it explicitly:
+
+```typescript
+const RunwayPage = () => {
+  if (typeof window === 'undefined') {
+    return <RunwaySkeleton />; // static placeholder, no browser API calls
+  }
+  return <RunwayApp />; // the real component: file picker, hooks, state, everything
+};
+```
+
+The prerendered/SSR output is `RunwaySkeleton`. Once the client mounts, `typeof window` is defined, so the same component tree renders `RunwayApp` instead on the very next render pass — hydration reconciles this the same way the existing `main.tsx` logic (`hydrateRoot` when the prerendered path matches) already expects a client render to follow the server one. No effects, no manual "am I mounted yet" state needed; the check itself is the guard. No special-case exclusion from prerendering is needed.
 
 ## Data Model
 
