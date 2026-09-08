@@ -46,4 +46,22 @@ describe('CashOnHandEditor editing', () => {
 
     expect(handleChange).toHaveBeenCalledWith([{ name: '', amount: 0 }]);
   });
+
+  it('preserves institution in the onChange payload even though it has no editable field', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <CashOnHandEditor
+        items={[{ name: 'Checking', amount: 100, institution: 'Wells Fargo' }]}
+        onChange={handleChange}
+      />,
+    );
+
+    await user.click(screen.getByPlaceholderText('Amount'));
+    await user.tab();
+
+    expect(handleChange).toHaveBeenCalledWith([
+      { name: 'Checking', amount: 100, institution: 'Wells Fargo' },
+    ]);
+  });
 });
