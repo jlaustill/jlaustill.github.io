@@ -872,7 +872,7 @@ Expected: PASS
 
 - [ ] **Step 5: Wire all four editors into `RunwayPage`**
 
-Replace the `fileName && (...)` block in `src/pages/runway/RunwayPage.tsx` with:
+Add the following JSX to `src/pages/runway/RunwayPage.tsx` immediately after the existing `{fileName && (...)}` block (do not remove that block — it still shows which file is loaded; this is a new block added below it):
 
 ```tsx
       {data && (
@@ -905,8 +905,6 @@ import ExpectedInflowsEditor from './components/ExpectedInflowsEditor';
 import PaymentsEditor from './components/PaymentsEditor';
 import DepositsEditor from './components/DepositsEditor';
 ```
-
-Also keep the existing `{fileName && (...)}` summary line above this block (don't delete it — it still shows which file is loaded).
 
 - [ ] **Step 6: Manual test**
 
