@@ -1518,6 +1518,24 @@ describe('CashOnHandEditor editing', () => {
 
     expect(handleChange).toHaveBeenCalledWith([{ name: '', amount: 0 }]);
   });
+
+  it('preserves institution in the onChange payload even though it has no editable field', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <CashOnHandEditor
+        items={[{ name: 'Checking', amount: 100, institution: 'Wells Fargo' }]}
+        onChange={handleChange}
+      />,
+    );
+
+    await user.click(screen.getByPlaceholderText('Amount'));
+    await user.tab();
+
+    expect(handleChange).toHaveBeenCalledWith([
+      { name: 'Checking', amount: 100, institution: 'Wells Fargo' },
+    ]);
+  });
 });
 ```
 
@@ -1558,55 +1576,70 @@ const CashOnHandEditor = ({ items, onChange }: ICashOnHandEditorProps) => {
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values }) => (
-        <Form>
-          <Typography variant="h6">Cash on Hand</Typography>
-          <FieldArray name="entries">
-            {({ push, remove }) => (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {values.entries.map((entry, index) => (
-                  <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                    <Field
-                      as={TextField}
-                      size="small"
-                      name={`entries.${index}.name`}
-                      placeholder="Name"
-                      onBlur={() => onChange(values.entries)}
-                    />
-                    <Field
-                      as={TextField}
-                      size="small"
-                      type="number"
-                      name={`entries.${index}.amount`}
-                      placeholder="Amount"
-                      onBlur={() => onChange(values.entries)}
-                    />
-                    <IconButton
-                      aria-label="Remove"
-                      onClick={() => {
-                        remove(index);
-                        onChange(values.entries.filter((_, i) => i !== index));
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                ))}
-                <Button
-                  type="button"
-                  onClick={() => {
-                    const next = { name: '', amount: 0 };
-                    push(next);
-                    onChange([...values.entries, next]);
-                  }}
-                >
-                  Add Account
-                </Button>
-              </Box>
-            )}
-          </FieldArray>
-        </Form>
-      )}
+      {({ values, handleBlur }) => {
+        const total = values.entries.reduce((sum, entry) => sum + entry.amount, 0);
+        return (
+          <Form>
+            <Typography variant="h6">Cash on Hand</Typography>
+            <FieldArray name="entries">
+              {({ push, remove }) => (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {values.entries.map((entry, index) => (
+                    <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                      <Field
+                        as={TextField}
+                        size="small"
+                        name={`entries.${index}.name`}
+                        placeholder="Name"
+                        onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                          handleBlur(e);
+                          onChange(values.entries);
+                        }}
+                      />
+                      <Field
+                        as={TextField}
+                        size="small"
+                        type="number"
+                        name={`entries.${index}.amount`}
+                        placeholder="Amount"
+                        onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                          handleBlur(e);
+                          onChange(values.entries);
+                        }}
+                      />
+                      {entry.institution && (
+                        <Typography variant="body2" color="text.secondary">
+                          {entry.institution}
+                        </Typography>
+                      )}
+                      <IconButton
+                        aria-label="Remove"
+                        onClick={() => {
+                          remove(index);
+                          onChange(values.entries.filter((_, i) => i !== index));
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  ))}
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const next = { name: '', amount: 0 };
+                      push(next);
+                      onChange([...values.entries, next]);
+                    }}
+                  >
+                    Add Account
+                  </Button>
+                </Box>
+              )}
+            </FieldArray>
+            <Typography sx={{ mt: 1 }}>Total: ${total.toFixed(2)}</Typography>
+          </Form>
+        );
+      }}
     </Formik>
   );
 };
@@ -1614,10 +1647,14 @@ const CashOnHandEditor = ({ items, onChange }: ICashOnHandEditorProps) => {
 export default CashOnHandEditor;
 ```
 
+**Two fixes versus an earlier draft of this task, both apply to Tasks 11/12's editors too — carry them forward:**
+1. **Institution + a running total are restored** (both existed in Task 5's read-only version and were dropped in an earlier draft of this Formik rewrite). The data was never actually lost from `onChange`'s payload — only its on-screen display was — but "the data survives structurally" isn't the same as the UI actually showing it, so both are back.
+2. **`onBlur` now calls Formik's own `handleBlur` before `onChange`.** `<Field as={...}>` spreads Formik's own `field` props (including its `handleBlur`) first, then the caller's props second — so a caller-supplied `onBlur` that doesn't itself call `handleBlur` silently replaces it, meaning Formik's `touched` state is never set for that field. Invisible today (no validation-error UI exists yet), but it would silently defeat the `cashOnHandSchema` Yup validation's `touched`-gated error display the moment any future task tries to show one. Destructure `handleBlur` from the same render-prop that already provides `values`, and call it first in every `onBlur` handler.
+
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `npm test -- CashOnHandEditor`
-Expected: PASS (3 tests)
+Expected: PASS (4 tests)
 
 - [ ] **Step 6: Commit**
 
