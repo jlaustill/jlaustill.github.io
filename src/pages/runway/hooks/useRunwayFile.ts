@@ -1,17 +1,19 @@
 import { useCallback, useState } from 'react';
-import { parseRunwayData } from './runwayFileIO';
+import { parseRunwayData, serializeRunwayData } from './runwayFileIO';
 import type { IRunwayData } from '../types/IRunwayData';
 
 interface IUseRunwayFileResult {
   data: IRunwayData | null;
   error: string | null;
   fileName: string | null;
+  canSave: boolean;
   load: () => Promise<void>;
+  save: () => Promise<void>;
   setData: (data: IRunwayData) => void;
 }
 
 function useRunwayFile(): IUseRunwayFileResult {
-  const [, setHandle] = useState<FileSystemFileHandle | null>(null);
+  const [handle, setHandle] = useState<FileSystemFileHandle | null>(null);
   const [data, setDataState] = useState<IRunwayData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -40,11 +42,27 @@ function useRunwayFile(): IUseRunwayFileResult {
     }
   }, []);
 
+  const save = useCallback(async () => {
+    if (!handle || !data) return;
+    setError(null);
+    try {
+      const writable = await handle.createWritable();
+      await writable.write(serializeRunwayData(data));
+      await writable.close();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Could not save: ${err.message}. Try opening the file again.`
+          : 'Could not save the file.',
+      );
+    }
+  }, [handle, data]);
+
   const setData = useCallback((next: IRunwayData) => {
     setDataState(next);
   }, []);
 
-  return { data, error, fileName, load, setData };
+  return { data, error, fileName, canSave: handle !== null, load, save, setData };
 }
 
 export default useRunwayFile;

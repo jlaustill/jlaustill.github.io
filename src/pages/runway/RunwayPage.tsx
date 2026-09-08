@@ -12,7 +12,7 @@ import RunwaySchedule from './components/RunwaySchedule';
 import { calculateRunwaySchedule } from './engine/runwayEngine';
 
 const RunwayApp = () => {
-  const { data, error, fileName, load, setData } = useRunwayFile();
+  const { data, error, fileName, canSave, load, save, setData } = useRunwayFile();
 
   const schedule = useMemo(() => {
     if (!data) return null;
@@ -24,9 +24,14 @@ const RunwayApp = () => {
       <Typography variant="h4" gutterBottom>
         Runway
       </Typography>
-      <Button variant="contained" onClick={load}>
-        Open runway.json
-      </Button>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Button variant="contained" onClick={load}>
+          Open runway.json
+        </Button>
+        <Button variant="outlined" onClick={save} disabled={!canSave}>
+          Save
+        </Button>
+      </Box>
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
           {error}
