@@ -14,6 +14,7 @@ const CompoundTurboCalculator = lazy(
 const KfaTranslator = lazy(() => import('./pages/kfa/KfaTranslator'));
 const KfaRaven = lazy(() => import('./pages/kfa/examples/KfaRaven'));
 const EconSpectrum = lazy(() => import('./pages/econ-spectrum/EconSpectrum'));
+const RunwayPage = lazy(() => import('./pages/runway/RunwayPage'));
 
 const lazyFallback = (
   <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -84,6 +85,17 @@ const App = () => {
               <PageMeta {...getRouteMeta('/econ-spectrum')} />
               <Suspense fallback={lazyFallback}>
                 <EconSpectrum />
+              </Suspense>
+            </>
+          }
+        />
+        <Route
+          path="/runway"
+          element={
+            <>
+              <PageMeta {...getRouteMeta('/runway')} />
+              <Suspense fallback={lazyFallback}>
+                <RunwayPage />
               </Suspense>
             </>
           }

@@ -38,6 +38,12 @@ const routeMeta: IRouteMeta[] = [
     title: 'Econ Spectrum | joSUu ostel',
     description: 'Capitalism vs. socialism by country and sector.',
   },
+  {
+    path: '/runway',
+    title: 'Runway | joSUu ostel',
+    description:
+      'Personal financial runway calculator — loads and saves a local runway.json file, no data leaves your device.',
+  },
 ];
 
 export function getRouteMeta(path: string): IRouteMeta {
