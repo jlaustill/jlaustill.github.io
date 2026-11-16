@@ -100,12 +100,12 @@ describe('ExpectedInflowsEditor editing', () => {
   it('leaves an approximate expected month exactly as it was when tabbed through', async () => {
     const handleChange = vi.fn();
     const user = userEvent.setup();
-    render(<ExpectedInflowsEditor items={[{ ...bonus, expectedMonth: '~2029' }]} onChange={handleChange} />);
+    render(<ExpectedInflowsEditor items={[{ ...bonus, expectedMonth: '~2031' }]} onChange={handleChange} />);
 
-    await user.click(screen.getByDisplayValue('~2029'));
+    await user.click(screen.getByDisplayValue('~2031'));
     await user.tab();
 
-    expect(lastPayload(handleChange)).toEqual([{ ...bonus, expectedMonth: '~2029' }]);
+    expect(lastPayload(handleChange)).toEqual([{ ...bonus, expectedMonth: '~2031' }]);
   });
 
   it('saves a cleared expected month as null', async () => {

@@ -565,16 +565,16 @@ describe('CashOnHandEditor', () => {
     render(
       <CashOnHandEditor
         items={[
-          { name: 'Checking', amount: 83.32, institution: 'Wells Fargo' },
-          { name: 'Venmo', amount: 112.99 },
+          { name: 'Checking', amount: 100.25, institution: 'Example Bank' },
+          { name: 'Wallet', amount: 25.75 },
         ]}
         onChange={() => {}}
       />,
     );
 
-    expect(screen.getByText(/Checking: \$83.32 \(Wells Fargo\)/)).toBeInTheDocument();
-    expect(screen.getByText(/Venmo: \$112.99/)).toBeInTheDocument();
-    expect(screen.getByText('Total: $196.31')).toBeInTheDocument();
+    expect(screen.getByText(/Checking: \$100.25 \(Example Bank\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Wallet: \$25.75/)).toBeInTheDocument();
+    expect(screen.getByText('Total: $126.00')).toBeInTheDocument();
   });
 });
 ```
@@ -663,14 +663,14 @@ describe('ExpectedInflowsEditor', () => {
     render(
       <ExpectedInflowsEditor
         items={[
-          { name: 'Progressive refund', amount: 300, date: null },
+          { name: 'Insurance refund', amount: 300, date: null },
           { name: 'Tax refund', amount: 450, date: '2026-04-15' },
         ]}
         onChange={() => {}}
       />,
     );
 
-    expect(screen.getByText(/Progressive refund: \$300.00 \(no date yet\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Insurance refund: \$300.00 \(no date yet\)/)).toBeInTheDocument();
     expect(screen.getByText(/Tax refund: \$450.00 \(2026-04-15\)/)).toBeInTheDocument();
   });
 });
@@ -808,7 +808,7 @@ describe('PaymentsEditor', () => {
     render(
       <PaymentsEditor
         items={[
-          { name: 'SoFi Personal Loan', amount: 0, day: 6, creditor: 'SoFi', pastDue: 1530.64 },
+          { name: 'Personal loan', amount: 0, day: 6, creditor: 'Example Lender', pastDue: 500.25 },
           { name: 'Rent', amount: 1200, day: 1 },
         ]}
         onChange={() => {}}
@@ -816,7 +816,7 @@ describe('PaymentsEditor', () => {
     );
 
     expect(
-      screen.getByText(/SoFi Personal Loan: \$0.00 \(day 6\) \(SoFi\) — past due \$1530.64/),
+      screen.getByText(/Personal loan: \$0.00 \(day 6\) \(Example Lender\) — past due \$500.25/),
     ).toBeInTheDocument();
     expect(screen.getByText(/Rent: \$1200.00 \(day 1\)/)).toBeInTheDocument();
   });
@@ -1062,18 +1062,18 @@ describe('calculateRunwaySchedule', () => {
         {
           name: 'Mortgage',
           amount: 0,
-          shouldBe: 14670,
+          shouldBe: 5400,
           day: 13,
           reinstatementDue: '2026-11-01',
-          revertsToMonthlyPayment: 2894.76,
+          revertsToMonthlyPayment: 1850.25,
         },
       ],
       deposits: [],
     };
     const schedule = calculateRunwaySchedule(data, today, 4);
     const amounts = schedule.scheduled.map((t) => `${t.date.toString()}: ${t.amount}`);
-    expect(amounts).toContain('2026-11-01: -14670');
-    expect(amounts.some((a) => a.startsWith('2026-12-13: -2894.76'))).toBe(true);
+    expect(amounts).toContain('2026-11-01: -5400');
+    expect(amounts.some((a) => a.startsWith('2026-12-13: -1850.25'))).toBe(true);
   });
 
   it('stops the schedule when a payment cannot be afforded', () => {
@@ -1524,7 +1524,7 @@ describe('CashOnHandEditor editing', () => {
     const user = userEvent.setup();
     render(
       <CashOnHandEditor
-        items={[{ name: 'Checking', amount: 100, institution: 'Wells Fargo' }]}
+        items={[{ name: 'Checking', amount: 100, institution: 'Example Bank' }]}
         onChange={handleChange}
       />,
     );
@@ -1533,7 +1533,7 @@ describe('CashOnHandEditor editing', () => {
     await user.tab();
 
     expect(handleChange).toHaveBeenCalledWith([
-      { name: 'Checking', amount: 100, institution: 'Wells Fargo' },
+      { name: 'Checking', amount: 100, institution: 'Example Bank' },
     ]);
   });
 });
@@ -2174,7 +2174,7 @@ Add to the same `describe('PaymentsEditor editing', ...)` block from Step 1:
     const user = userEvent.setup();
     render(
       <PaymentsEditor
-        items={[{ name: 'SoFi Personal Loan', amount: 0, day: 6, pastDue: 1530.64 }]}
+        items={[{ name: 'Personal loan', amount: 0, day: 6, pastDue: 500.25 }]}
         onChange={handleChange}
       />,
     );
@@ -2183,7 +2183,7 @@ Add to the same `describe('PaymentsEditor editing', ...)` block from Step 1:
     await user.tab();
 
     expect(handleChange).toHaveBeenCalledWith([
-      { name: 'SoFi Personal Loan', amount: 0, day: 6, pastDue: 1530.64 },
+      { name: 'Personal loan', amount: 0, day: 6, pastDue: 500.25 },
     ]);
   });
 ```

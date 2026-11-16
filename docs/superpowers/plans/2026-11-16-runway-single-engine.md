@@ -24,7 +24,7 @@
 ## Review Focus
 
 1. A blank balance, interest rate or escrow in the payments editor removes the value; it never becomes `0` (a `0` balance reads as paid off and lengthens the runway). Test: Task 7.
-2. Malformed dates (`''`, `'2027-02-30'`, `'~2029'`, missing) mean "no date": no crash, no money counted. Tests: Task 3 (`parseIsoDate`, inflows), Task 2 (a bad plan date is skipped).
+2. Malformed dates (`''`, `'2027-02-30'`, `'~2031'`, missing) mean "no date": no crash, no money counted. Tests: Task 3 (`parseIsoDate`, inflows), Task 2 (a bad plan date is skipped).
 3. Recurring income with empty or out-of-range `days`, or `amount` 0, produces no deposits instead of crashing or looping. Test: Task 3.
 4. An optional array that is present but not an array (`"recurringIncome": {}`) is a clear load error, not a crash. Test: Task 4.
 5. Money due or arriving today counts today, for bills and income alike. Tests: Task 2 (`getNextDueDate`), Task 3 (income).
@@ -39,7 +39,7 @@
 
 **Interfaces:**
 - Produces: `saveWithoutEdits(fileText: string): Promise<string>` renders `RunwayApp`, opens `fileText` through a stubbed `showOpenFilePicker`, presses Tab once per focusable element (`input, select, textarea, button`, plus one), clicks Save, and resolves to the text the stubbed `createWritable()` received. It unstubs globals afterwards.
-- Produces: `liveShapedFile` (exported from the test util), a synthetic object shaped like the real file: two cash entries (one with made-up `institution`, `accountNumber`, `routingNumber`, `note`, `updatedAt`); two inflows (`{ amount: 900, gross: 1400, date: null, expectedMonth: '2027-03', confirmed: true }` and `{ amount: null, date: null, expectedMonth: '~2029', confirmed: false }`); one `recurringIncome` entry (`semi-monthly`, `days: [1, 15]`, extra `employer`, `type`, `disposition`); six payments covering `utility` with `pastDue: null`, `creditCard` with `balance` and `note: ''`, `mortgage` with `reinstatedOn`, `collection` with `amount: 0` and a `paymentPlan` carrying extra keys (`frequency`, `finalAmount`, `paymentMethod`, `confirmationReferenceId`), `secured` with `interestRate` and `payoff`, and a cancelled `subscription` at `amount: 0`; `deposits: []` (removed in Task 4); and `extraTopLevelKey: { kept: true }`.
+- Produces: `liveShapedFile` (exported from the test util), a synthetic object shaped like the real file: two cash entries (one with made-up `institution`, `accountNumber`, `routingNumber`, `note`, `updatedAt`); two inflows (`{ amount: 900, gross: 1400, date: null, expectedMonth: '2027-03', confirmed: true }` and `{ amount: null, date: null, expectedMonth: '~2031', confirmed: false }`); one `recurringIncome` entry (`semi-monthly`, `days: [1, 15]`, extra `employer`, `type`, `disposition`); six payments covering `utility` with `pastDue: null`, `creditCard` with `balance` and `note: ''`, `mortgage` with `reinstatedOn`, `collection` with `amount: 0` and a `paymentPlan` carrying extra keys (`frequency`, `finalAmount`, `paymentMethod`, `confirmationReferenceId`), `secured` with `interestRate` and `payoff`, and a cancelled `subscription` at `amount: 0`; `deposits: []` (removed in Task 4); and `extraTopLevelKey: { kept: true }`.
 
 - [ ] **Step 1: Write the test**
 
@@ -103,7 +103,7 @@ expect(getNextDueDate(storeCard, today)).toMatchObject({ amount: 450, fromPlan: 
   - `getNextMonthlyDate`: (13, 2026-09-08) gives 09-13; (13, 09-20) gives 10-13; (31, 2026-02-01) gives 02-28; (8, 2026-09-08) gives 09-08.
   - `getNextWeeklyDate`: (5, Tue 2026-09-08) gives 09-11; (2, 2026-09-08) gives 09-08.
   - `parseIsoDate`: `'2027-02-10'` gives a date; `''`, `null`, `42`, `'2027-02-30'`, `'2027-2-1'` give null.
-  - `lastDayOfMonth`: `'2027-02'` gives 2027-02-28; `'2028-02'` gives 2028-02-29; `'~2029'`, `'2027-13'`, `null` give null.
+  - `lastDayOfMonth`: `'2027-02'` gives 2027-02-28; `'2028-02'` gives 2028-02-29; `'~2031'`, `'2027-13'`, `null` give null.
   - Income, with today 2026-11-16:
     - semi-monthly `[1, 15]` to 2027-01-31 gives 12-01, 12-15, 01-01, 01-15;
     - with today 2026-12-15 and maxDate 2027-01-01, it gives 12-15 and 01-01 (Review Focus 5);
@@ -119,7 +119,7 @@ expect(getNextDueDate(storeCard, today)).toMatchObject({ amount: 450, fromPlan: 
     - `date: '2027-02-10'` with a month lands on 02-10 (the date wins);
     - month `'2026-11'` lands on 2026-11-30;
     - `date: ''` with month `'2027-03'` lands on 03-31;
-    - none counted for: `confirmed: false`, `confirmed` missing, `amount: null`, `amount: 0`, `'~2029'`, a date before today, month `'2026-10'`, or `'2027-02-30'` with no month (Review Focus 2).
+    - none counted for: `confirmed: false`, `confirmed` missing, `amount: null`, `amount: 0`, `'~2031'`, a date before today, month `'2026-10'`, or `'2027-02-30'` with no month (Review Focus 2).
 - [ ] **Step 2: Run and see them fail.** `npx vitest run src/pages/runway/engine/calendar.test.ts src/pages/runway/engine/income.test.ts`. Expected: FAIL, modules not found.
 - [ ] **Step 3: Implement** the four calendar helpers and both generators. Income seeds from the later of today and `startDate`, and stops after the earlier of `endDate` and `maxDate`. `days` must be integers in 1 to 31 (weekly: 1 to 7); invalid entries are ignored, and an entry with no valid days yields nothing.
 - [ ] **Step 4: Run.** The same command, plus `payments.test.ts`. Expected: PASS. Then `npx tsc -b` and `npm run lint`: clean.
@@ -194,7 +194,7 @@ expect(getNextDueDate(storeCard, today)).toMatchObject({ amount: 450, fromPlan: 
 - [ ] **Step 1: Write the failing tests:**
   - clearing amount, then blurring, gives `amount: null`;
   - clearing the date gives `date: null`;
-  - tabbing through `expectedMonth: '~2029'` leaves it `'~2029'`;
+  - tabbing through `expectedMonth: '~2031'` leaves it `'~2031'`;
   - clicking confirmed flips it;
   - unknown `gross` and `note` keys survive;
   - all fixtures are generic.

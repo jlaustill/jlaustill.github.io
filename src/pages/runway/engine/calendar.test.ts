@@ -49,7 +49,7 @@ describe('lastDayOfMonth', () => {
     expect(lastDayOfMonth('2028-02')?.toString()).toBe('2028-02-29');
   });
 
-  it.each([['~2029'], ['2027-13'], [null]])('treats %j as no month', (value) => {
+  it.each([['~2031'], ['2027-13'], [null]])('treats %j as no month', (value) => {
     expect(lastDayOfMonth(value)).toBeNull();
   });
 });

@@ -90,7 +90,7 @@ A synthetic example:
   ],
   "expectedInflows": [
     { "name": "Bonus", "amount": 900, "date": null, "expectedMonth": "2027-03", "confirmed": true },
-    { "name": "Maybe later", "amount": null, "date": null, "expectedMonth": "~2029", "confirmed": false }
+    { "name": "Maybe later", "amount": null, "date": null, "expectedMonth": "~2031", "confirmed": false }
   ],
   "payments": [
     { "name": "Power", "amount": 120, "day": 3, "type": "utility" },
@@ -111,7 +111,7 @@ A synthetic example:
   weekends; modeling the later date is the conservative side.
 - **Expected inflows.** Counted only when `confirmed` is `true` and `amount` is a positive
   number. The date is `date` when set, otherwise the last day of `expectedMonth` when it is
-  exactly `YYYY-MM`. Anything else (no date, an approximate month like `~2029`, a date before
+  exactly `YYYY-MM`. Anything else (no date, an approximate month like `~2031`, a date before
   today) is not counted. An empty-string date is treated as null.
 - **Payments** (the CLI's rules, unchanged):
   - an `amount` of 0 with no remaining plan dates is not scheduled;

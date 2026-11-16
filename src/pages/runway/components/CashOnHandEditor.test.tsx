@@ -9,17 +9,17 @@ describe('CashOnHandEditor', () => {
     render(
       <CashOnHandEditor
         items={[
-          { name: 'Checking', amount: 83.32, institution: 'Wells Fargo' },
-          { name: 'Venmo', amount: 112.99 },
+          { name: 'Checking', amount: 100.25, institution: 'Example Bank' },
+          { name: 'Wallet', amount: 25.75 },
         ]}
         onChange={() => {}}
       />,
     );
 
     expect(screen.getByDisplayValue('Checking')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('83.32')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Venmo')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('112.99')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('100.25')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Wallet')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('25.75')).toBeInTheDocument();
   });
 });
 
@@ -52,7 +52,7 @@ describe('CashOnHandEditor editing', () => {
     const user = userEvent.setup();
     render(
       <CashOnHandEditor
-        items={[{ name: 'Checking', amount: 100, institution: 'Wells Fargo' }]}
+        items={[{ name: 'Checking', amount: 100, institution: 'Example Bank' }]}
         onChange={handleChange}
       />,
     );
@@ -61,7 +61,7 @@ describe('CashOnHandEditor editing', () => {
     await user.tab();
 
     expect(handleChange).toHaveBeenCalledWith([
-      { name: 'Checking', amount: 100, institution: 'Wells Fargo' },
+      { name: 'Checking', amount: 100, institution: 'Example Bank' },
     ]);
   });
 

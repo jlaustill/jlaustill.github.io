@@ -157,7 +157,7 @@ describe('generateInflowDeposits', () => {
     ['missing its confirmation', { name: 'Bonus', amount: 900, date: null, expectedMonth: '2027-03' }],
     ['without an amount', bonus({ amount: null })],
     ['of 0', bonus({ amount: 0 })],
-    ['with only an approximate month', bonus({ expectedMonth: '~2029' })],
+    ['with only an approximate month', bonus({ expectedMonth: '~2031' })],
     ['dated before today', bonus({ date: '2026-11-01', expectedMonth: null })],
     ['expected in a month that has ended', bonus({ expectedMonth: '2026-10' })],
     ['dated on an impossible day', bonus({ date: '2027-02-30', expectedMonth: null })],
