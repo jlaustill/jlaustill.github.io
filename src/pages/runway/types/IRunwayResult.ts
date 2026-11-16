@@ -13,3 +13,17 @@ export type TPayoffProjection =
   | { status: 'neverPaysOff' } // the regular payment does not cover the interest, or payments stop first
   | { status: 'beyondHorizon' }
   | { status: 'missingValues'; fields: TDebtField[] };
+
+export interface IDebtPayoff {
+  name: string;
+  projection: TPayoffProjection;
+}
+
+export interface IRunwayResult {
+  startingBalance: number;
+  scheduled: IScheduledTransaction[];
+  runwayEndDate: Temporal.PlainDate | null; // null: beyond the horizon, or nothing left to pay
+  stoppedAtName: string | null;
+  lowestBalance: { amount: number; date: Temporal.PlainDate };
+  payoffs: IDebtPayoff[];
+}

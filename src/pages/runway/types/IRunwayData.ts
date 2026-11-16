@@ -1,3 +1,6 @@
+// The data file's own schema. Keys not listed here are kept untouched through a load and a
+// save, so the page never drops what it does not display.
+
 export interface ICashOnHandEntry {
   name: string;
   amount: number;
@@ -49,23 +52,11 @@ export interface IPayment {
   chargeOffDate?: string | null;
   updatedAt?: string | null;
   note?: string;
-  reinstatementDue?: string;
-  revertsToMonthlyPayment?: number;
-}
-
-export interface IDeposit {
-  name: string;
-  amount: number;
-  frequency: 'weekly' | 'monthly';
-  day: number;
-  startDate?: string;
-  endDate?: string;
-  occurrences?: number;
 }
 
 export interface IRunwayData {
   cashOnHand: ICashOnHandEntry[];
-  expectedInflows: IExpectedInflow[];
   payments: IPayment[];
-  deposits: IDeposit[];
+  recurringIncome: IRecurringIncome[];
+  expectedInflows: IExpectedInflow[];
 }

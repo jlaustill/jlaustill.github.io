@@ -7,17 +7,17 @@ import RunwaySkeleton from './RunwaySkeleton';
 import CashOnHandEditor from './components/CashOnHandEditor';
 import ExpectedInflowsEditor from './components/ExpectedInflowsEditor';
 import PaymentsEditor from './components/PaymentsEditor';
-import DepositsEditor from './components/DepositsEditor';
 import RunwaySchedule from './components/RunwaySchedule';
-import { calculateRunwaySchedule } from './engine/runwayEngine';
+import { calculateRunway } from './engine/runwayEngine';
 
 export const RunwayApp = () => {
   const { data, error, fileName, canSave, load, save, setData } = useRunwayFile();
+  const today = useMemo(() => Temporal.Now.plainDateISO(), []);
 
-  const schedule = useMemo(() => {
+  const result = useMemo(() => {
     if (!data) return null;
-    return calculateRunwaySchedule(data, Temporal.Now.plainDateISO());
-  }, [data]);
+    return calculateRunway(data, today);
+  }, [data, today]);
 
   return (
     <Box>
@@ -40,7 +40,7 @@ export const RunwayApp = () => {
       {fileName && (
         <Typography sx={{ mt: 2 }}>
           Loaded: {fileName} ({data?.payments.length ?? 0} payments,{' '}
-          {data?.deposits.length ?? 0} deposits)
+          {data?.recurringIncome.length ?? 0} income sources)
         </Typography>
       )}
       {data && (
@@ -57,11 +57,7 @@ export const RunwayApp = () => {
             items={data.payments}
             onChange={(payments) => setData({ ...data, payments })}
           />
-          <DepositsEditor
-            items={data.deposits}
-            onChange={(deposits) => setData({ ...data, deposits })}
-          />
-          {schedule && <RunwaySchedule schedule={schedule} />}
+          {result && <RunwaySchedule result={result} />}
         </Box>
       )}
     </Box>

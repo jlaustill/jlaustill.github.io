@@ -104,7 +104,6 @@ export const liveShapedFile = {
     },
     { name: 'Old subscription', amount: 0, day: 6, type: 'subscription', shouldBe: 10, disposition: 'cancel' },
   ],
-  deposits: [],
   extraTopLevelKey: { kept: true },
 };
 

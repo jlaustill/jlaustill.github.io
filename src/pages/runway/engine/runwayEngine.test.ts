@@ -1,145 +1,166 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
-import {
-  getNextMonthlyDate,
-  getNextWeeklyDate,
-  sumCashOnHand,
-  generateDepositSchedule,
-  generateExpectedInflowTransactions,
-  calculateRunwaySchedule,
-} from './runwayEngine';
+import { calculateRunway } from './runwayEngine';
 import type { IRunwayData } from '../types/IRunwayData';
+import type { IScheduledTransaction } from '../types/IRunwayResult';
 
-describe('getNextMonthlyDate', () => {
-  it('uses this month if the target day has not passed', () => {
-    const after = Temporal.PlainDate.from('2026-09-08');
-    expect(getNextMonthlyDate(13, after).toString()).toBe('2026-09-13');
-  });
+const date = (isoDate: string) => Temporal.PlainDate.from(isoDate);
+const today = date('2026-11-16');
 
-  it('rolls to next month if the target day has passed', () => {
-    const after = Temporal.PlainDate.from('2026-09-20');
-    expect(getNextMonthlyDate(13, after).toString()).toBe('2026-10-13');
-  });
-
-  it('clamps to the last day of a short month', () => {
-    const after = Temporal.PlainDate.from('2026-01-01');
-    expect(getNextMonthlyDate(31, after).toString()).toBe('2026-01-31');
-    const afterFeb = Temporal.PlainDate.from('2026-02-01');
-    expect(getNextMonthlyDate(31, afterFeb).toString()).toBe('2026-02-28');
-  });
+const runwayData = (overrides: Partial<IRunwayData>): IRunwayData => ({
+  cashOnHand: [],
+  payments: [],
+  recurringIncome: [],
+  expectedInflows: [],
+  ...overrides,
 });
+const rows = (scheduled: IScheduledTransaction[]) =>
+  scheduled.map((row) => [row.date.toString(), row.name, row.amount]);
 
-describe('getNextWeeklyDate', () => {
-  it('finds the next occurrence of a weekday (1=Mon..7=Sun)', () => {
-    const tuesday = Temporal.PlainDate.from('2026-09-08'); // a Tuesday
-    expect(getNextWeeklyDate(5, tuesday).toString()).toBe('2026-09-11'); // next Friday
-  });
-});
-
-describe('sumCashOnHand', () => {
-  it('sums all account amounts', () => {
-    expect(sumCashOnHand([{ name: 'A', amount: 10 }, { name: 'B', amount: 5.5 }])).toBe(15.5);
-  });
-});
-
-describe('generateDepositSchedule', () => {
-  it('generates monthly occurrences up to an endDate', () => {
-    const start = Temporal.PlainDate.from('2026-09-01');
-    const result = generateDepositSchedule(
-      [{ name: 'Paycheck', amount: 1000, frequency: 'monthly', day: 25, endDate: '2026-11-25' }],
-      start,
+describe('calculateRunway', () => {
+  it('starts from the sum of cash on hand', () => {
+    const result = calculateRunway(
+      runwayData({ cashOnHand: [{ name: 'Checking', amount: 500 }, { name: 'Wallet', amount: 250.5 }] }),
+      today,
     );
-    expect(result.map((t) => t.date.toString())).toEqual(['2026-09-25', '2026-10-25', '2026-11-25']);
+    expect(result.startingBalance).toBe(750.5);
+    expect(result.scheduled).toEqual([]);
+    expect(result.runwayEndDate).toBeNull();
+    expect(result.lowestBalance.amount).toBe(750.5);
+    expect(result.lowestBalance.date.toString()).toBe('2026-11-16');
   });
 
-  it('generates weekly occurrences up to a count', () => {
-    const start = Temporal.PlainDate.from('2026-09-08'); // Tuesday
-    const result = generateDepositSchedule(
-      [{ name: 'Gig income', amount: 100, frequency: 'weekly', day: 5, occurrences: 2 }],
-      start,
+  it("applies income that lands on the same day before that day's bill", () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 0 }],
+        recurringIncome: [{ name: 'Salary', amount: 1000, schedule: 'monthly', days: [1] }],
+        payments: [{ name: 'Rent', amount: 900, day: 1 }],
+      }),
+      today,
+      3,
     );
-    expect(result.map((t) => t.date.toString())).toEqual(['2026-09-11', '2026-09-18']);
-  });
-
-  it('stops at maxDate for a deposit with neither endDate nor occurrences, instead of looping forever', () => {
-    const start = Temporal.PlainDate.from('2026-09-01');
-    const maxDate = Temporal.PlainDate.from('2026-12-01');
-    const result = generateDepositSchedule(
-      [{ name: 'Paycheck', amount: 1500, frequency: 'monthly', day: 25 }],
-      start,
-      maxDate,
-    );
-    expect(result.map((t) => t.date.toString())).toEqual(['2026-09-25', '2026-10-25', '2026-11-25']);
-  });
-});
-
-describe('generateExpectedInflowTransactions', () => {
-  it('includes only inflows with a non-null date', () => {
-    const result = generateExpectedInflowTransactions([
-      { name: 'Refund', amount: 300, date: null },
-      { name: 'Tax refund', amount: 450, date: '2026-04-15' },
+    expect(rows(result.scheduled).slice(0, 2)).toEqual([
+      ['2026-12-01', 'Salary', 1000],
+      ['2026-12-01', 'Rent', -900],
     ]);
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Tax refund');
-  });
-});
-
-describe('calculateRunwaySchedule', () => {
-  const today = Temporal.PlainDate.from('2026-09-08');
-
-  it('starts from the sum of cashOnHand', () => {
-    const data: IRunwayData = {
-      cashOnHand: [{ name: 'Checking', amount: 500 }],
-      expectedInflows: [],
-      payments: [],
-      deposits: [],
-    };
-    expect(calculateRunwaySchedule(data, today).startingBalance).toBe(500);
+    expect(result.stoppedAtName).toBeNull();
   });
 
-  it('excludes a delinquent payment with amount 0 and no reinstatement fields', () => {
-    const data: IRunwayData = {
-      cashOnHand: [{ name: 'Checking', amount: 1000 }],
-      expectedInflows: [],
-      payments: [{ name: 'Charged off card', amount: 0, day: 5 }],
-      deposits: [],
-    };
-    const schedule = calculateRunwaySchedule(data, today);
-    expect(schedule.scheduled).toHaveLength(0);
-    expect(schedule.runwayEndDate).toBeNull();
+  it('ends the runway the day before the first payment it cannot cover', () => {
+    const result = calculateRunway(
+      runwayData({ cashOnHand: [{ name: 'Checking', amount: 100 }], payments: [{ name: 'Rent', amount: 1200, day: 1 }] }),
+      today,
+    );
+    expect(result.stoppedAtName).toBe('Rent');
+    expect(result.runwayEndDate?.toString()).toBe('2026-11-30');
   });
 
-  it('applies a one-time reinstatement lump then reverts to the recurring amount', () => {
-    const data: IRunwayData = {
-      cashOnHand: [{ name: 'Checking', amount: 20000 }],
-      expectedInflows: [],
-      payments: [
-        {
-          name: 'Mortgage',
-          amount: 0,
-          shouldBe: 14670,
-          day: 13,
-          reinstatementDue: '2026-11-01',
-          revertsToMonthlyPayment: 2894.76,
-        },
-      ],
-      deposits: [],
-    };
-    const schedule = calculateRunwaySchedule(data, today, 4);
-    const amounts = schedule.scheduled.map((t) => `${t.date.toString()}: ${t.amount}`);
-    expect(amounts).toContain('2026-11-01: -14670');
-    expect(amounts.some((a) => a.startsWith('2026-12-13: -2894.76'))).toBe(true);
+  it('has no runway end when income covers every bill for ten years', () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 0 }],
+        recurringIncome: [{ name: 'Salary', amount: 2000, schedule: 'semi-monthly', days: [1, 15] }],
+        payments: [{ name: 'Rent', amount: 1500, day: 2 }],
+      }),
+      today,
+    );
+    expect(result.runwayEndDate).toBeNull();
+    expect(result.stoppedAtName).toBeNull();
   });
 
-  it('stops the schedule when a payment cannot be afforded', () => {
-    const data: IRunwayData = {
-      cashOnHand: [{ name: 'Checking', amount: 100 }],
-      expectedInflows: [],
-      payments: [{ name: 'Rent', amount: 1200, day: 1 }],
-      deposits: [],
-    };
-    const schedule = calculateRunwaySchedule(data, today);
-    expect(schedule.stoppedAtName).toBe('Rent');
-    expect(schedule.runwayEndDate).not.toBeNull();
+  it('stops charging a debt once it is paid off and flags the final payment', () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 1000 }],
+        payments: [{ name: 'Plan', amount: 100, day: 20, type: 'collection', balance: 300 }],
+      }),
+      today,
+    );
+    expect(result.scheduled.map((row) => [row.date.toString(), row.amount, row.paidOff ?? false])).toEqual([
+      ['2026-11-20', -100, false],
+      ['2026-12-20', -100, false],
+      ['2027-01-20', -100, true],
+    ]);
+    expect(result.runwayEndDate).toBeNull();
+  });
+
+  it('counts a confirmed inflow on the last day of its expected month', () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 800 }],
+        expectedInflows: [{ name: 'Bonus', amount: 900, date: null, expectedMonth: '2026-12', confirmed: true }],
+        payments: [{ name: 'Bill', amount: 800, day: 31 }],
+      }),
+      today,
+    );
+    expect(rows(result.scheduled)).toContainEqual(['2026-12-31', 'Bonus', 900]);
+    expect(result.stoppedAtName).toBe('Bill');
+    expect(result.runwayEndDate?.toString()).toBe('2027-01-30');
+  });
+
+  it('does not count an unconfirmed inflow', () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 800 }],
+        expectedInflows: [{ name: 'Bonus', amount: 900, date: null, expectedMonth: '2026-12', confirmed: false }],
+        payments: [{ name: 'Bill', amount: 800, day: 31 }],
+      }),
+      today,
+    );
+    expect(result.runwayEndDate?.toString()).toBe('2026-12-30');
+  });
+
+  it('reports the lowest projected balance and when it happens', () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 1000 }],
+        recurringIncome: [{ name: 'Salary', amount: 600, schedule: 'monthly', days: [20] }],
+        payments: [{ name: 'Rent', amount: 900, day: 18 }],
+      }),
+      today,
+    );
+    expect(result.lowestBalance.amount).toBe(100);
+    expect(result.lowestBalance.date.toString()).toBe('2026-11-18');
+  });
+
+  it('lists a payoff projection for each debt, in file order', () => {
+    const result = calculateRunway(
+      runwayData({
+        payments: [
+          { name: 'Power', amount: 120, day: 3, type: 'utility' },
+          { name: 'Card', amount: 300, day: 9, type: 'creditCard', balance: 5000 },
+          { name: 'Plan', amount: 100, day: 20, type: 'collection', balance: 300 },
+        ],
+      }),
+      today,
+    );
+    expect(result.payoffs.map((payoff) => payoff.name)).toEqual(['Card', 'Plan']);
+    expect(result.payoffs[0].projection).toEqual({ status: 'missingValues', fields: ['interestRate'] });
+    const plan = result.payoffs[1].projection;
+    expect(plan.status === 'paidOff' && plan.date.toString()).toBe('2027-01-20');
+  });
+
+  it('skips a payment of 0 with no plan', () => {
+    const result = calculateRunway(
+      runwayData({ cashOnHand: [{ name: 'Checking', amount: 100 }], payments: [{ name: 'Cancelled', amount: 0, day: 5 }] }),
+      today,
+    );
+    expect(result.scheduled).toEqual([]);
+    expect(result.runwayEndDate).toBeNull();
+  });
+
+  it('keeps open-ended income inside the horizon', () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 0 }],
+        recurringIncome: [{ name: 'Salary', amount: 1000, schedule: 'semi-monthly', days: [1, 15] }],
+        payments: [{ name: 'Rent', amount: 500, day: 3 }],
+      }),
+      today,
+      3,
+    );
+    expect(result.scheduled.length).toBeGreaterThan(0);
+    expect(result.scheduled.every((row) => Temporal.PlainDate.compare(row.date, date('2027-02-16')) <= 0)).toBe(true);
   });
 });
