@@ -12,6 +12,11 @@ export interface IExpectedInflow {
   note?: string;
 }
 
+export interface IPaymentPlan {
+  amount: number;
+  dueDates: string[]; // YYYY-MM-DD; replaces the regular payment until the last date has passed
+}
+
 export interface IPayment {
   name: string;
   amount: number;
@@ -19,6 +24,9 @@ export interface IPayment {
   pastDue?: number | null;
   day: number;
   balance?: number;
+  interestRate?: number; // annual percentage as printed: 24.99 means 24.99%
+  escrow?: number; // mortgage only
+  paymentPlan?: IPaymentPlan;
   creditor?: string;
   merchant?: string;
   type?: string;
