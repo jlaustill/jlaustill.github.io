@@ -7,8 +7,22 @@ export interface ICashOnHandEntry {
 
 export interface IExpectedInflow {
   name: string;
-  amount: number;
+  amount: number | null; // null when the amount is not known yet
   date: string | null;
+  expectedMonth?: string | null; // free text; counted only when it is an exact YYYY-MM
+  confirmed?: boolean;
+  note?: string;
+}
+
+export type TIncomeSchedule = 'semi-monthly' | 'monthly' | 'weekly';
+
+export interface IRecurringIncome {
+  name: string;
+  amount: number; // per payday
+  schedule: TIncomeSchedule;
+  days: number[]; // days of the month, or ISO weekdays 1 (Monday) to 7 (Sunday) when weekly
+  startDate?: string;
+  endDate?: string;
   note?: string;
 }
 

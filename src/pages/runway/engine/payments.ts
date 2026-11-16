@@ -1,4 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill';
+import { getNextMonthlyDate, parseIsoDate } from './calendar';
 import { applyPayment, createDebt, findMissingDebtFields, isDebtType } from './debt';
 import type { IPayment } from '../types/IRunwayData';
 import type { TPayoffProjection } from '../types/IRunwayResult';
@@ -7,29 +8,6 @@ export interface IDueDate {
   date: Temporal.PlainDate;
   amount: number;
   fromPlan: boolean;
-}
-
-// Only a real YYYY-MM-DD date counts. Anything else in the file (an empty string, an
-// impossible day, free text) means "no date", never a crash.
-export function parseIsoDate(value: unknown): Temporal.PlainDate | null {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return null;
-  }
-  try {
-    return Temporal.PlainDate.from(value, { overflow: 'reject' });
-  } catch {
-    return null;
-  }
-}
-
-// The first occurrence of `day` on or after `onOrAfter`, clamped to the length of short months.
-function getNextMonthlyDate(day: number, onOrAfter: Temporal.PlainDate): Temporal.PlainDate {
-  const inMonth = (month: Temporal.PlainDate) => month.with({ day: Math.min(day, month.daysInMonth) });
-  const thisMonth = inMonth(onOrAfter);
-  if (Temporal.PlainDate.compare(thisMonth, onOrAfter) >= 0) {
-    return thisMonth;
-  }
-  return inMonth(onOrAfter.with({ day: 1 }).add({ months: 1 }));
 }
 
 function planDates(payment: IPayment): Temporal.PlainDate[] {

@@ -85,7 +85,10 @@ export function generateDepositSchedule(
 
 export function generateExpectedInflowTransactions(inflows: IExpectedInflow[]): IScheduledTransaction[] {
   return inflows
-    .filter((inflow): inflow is IExpectedInflow & { date: string } => inflow.date !== null)
+    .filter(
+      (inflow): inflow is IExpectedInflow & { date: string; amount: number } =>
+        inflow.date !== null && inflow.amount !== null,
+    )
     .map((inflow) => ({
       date: Temporal.PlainDate.from(inflow.date),
       name: inflow.name,
