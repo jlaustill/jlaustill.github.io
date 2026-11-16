@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { IRecurringIncome, TIncomeSchedule } from '../types/IRunwayData';
+import { numberOrZero } from './fieldValues';
 
 interface IRecurringIncomeEditorProps {
   items: IRecurringIncome[];
@@ -40,10 +41,12 @@ interface IDaysFieldProps {
   onCommit: (days: number[]) => void;
 }
 
-// Keeps the typed text locally so "1, " can be typed on the way to "1, 15". The parsed days are
-// committed on blur; text with no valid day in it puts the previous days back.
+// Keeps the typed text locally so "1, " can be typed on the way to "1, 15". Days are committed
+// on blur only when the text was actually changed, so tabbing through never rewrites what the
+// file holds; text with no valid day in it puts the previous text back.
 const DaysField = ({ days, schedule, onCommit }: IDaysFieldProps) => {
-  const [text, setText] = useState(days.join(', '));
+  const shownText = days.join(', ');
+  const [text, setText] = useState(shownText);
   return (
     <TextField
       size="small"
@@ -51,10 +54,16 @@ const DaysField = ({ days, schedule, onCommit }: IDaysFieldProps) => {
       value={text}
       onChange={(event) => setText(event.target.value)}
       onBlur={() => {
+        if (text === shownText) {
+          return;
+        }
         const parsed = parseDays(text, schedule);
-        const committed = parsed.length > 0 ? parsed : days;
-        setText(committed.join(', '));
-        onCommit(committed);
+        if (parsed.length === 0) {
+          setText(shownText);
+          return;
+        }
+        setText(parsed.join(', '));
+        onCommit(parsed);
       }}
     />
   );
@@ -96,9 +105,7 @@ const RecurringIncomeEditor = ({ items, onChange }: IRecurringIncomeEditorProps)
                         name={`entries.${index}.amount`}
                         placeholder="Amount"
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const raw = e.target.value;
-                          const parsed = raw === '' ? 0 : Number(raw);
-                          setFieldValue(`entries.${index}.amount`, Number.isNaN(parsed) ? 0 : parsed);
+                          setFieldValue(`entries.${index}.amount`, numberOrZero(e.target.value));
                         }}
                         onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                           handleBlur(e);

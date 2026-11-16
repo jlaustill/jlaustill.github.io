@@ -105,6 +105,11 @@ describe('projectPayoff', () => {
     expect(projectPayoff(card, today, maxDate)).toEqual({ status: 'missingValues', fields: ['interestRate'] });
   });
 
+  it('reports a debt whose payment amount is missing as never paying off', () => {
+    const card = { name: 'Card', day: 6, type: 'creditCard', balance: 1000, interestRate: 10 } as unknown as IPayment;
+    expect(projectPayoff(card, today, maxDate)).toEqual({ status: 'neverPaysOff' });
+  });
+
   it('ignores anything that is not a debt', () => {
     expect(projectPayoff({ name: 'Power', amount: 120, day: 26, type: 'utility' }, today, maxDate)).toBeNull();
   });

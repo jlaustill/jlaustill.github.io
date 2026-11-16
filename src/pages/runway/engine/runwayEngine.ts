@@ -1,6 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill';
+import { byDate } from './calendar';
 import { applyPayment, createDebt, type IDebt } from './debt';
 import { generateIncomeDeposits, generateInflowDeposits } from './income';
+import { roundToCents } from './money';
 import { getNextDueDate, projectPayoff, type IDueDate } from './payments';
 import type { IPayment, IRunwayData } from '../types/IRunwayData';
 import type { IDebtPayoff, IRunwayResult, IScheduledTransaction } from '../types/IRunwayResult';
@@ -13,10 +15,6 @@ interface IUpcomingPayment extends IDueDate {
   payment: IPayment;
   debt: IDebt | null; // null when the payment never burns down
 }
-
-const roundToCents = (amount: number) => Math.round(amount * 100) / 100;
-const byDate = (a: { date: Temporal.PlainDate }, b: { date: Temporal.PlainDate }) =>
-  Temporal.PlainDate.compare(a.date, b.date);
 
 function upcomingPayments(payments: IPayment[], today: Temporal.PlainDate): IUpcomingPayment[] {
   const upcoming: IUpcomingPayment[] = [];
@@ -89,7 +87,9 @@ export function calculateRunway(
     // A debt's final payment is only what is left on it, which can be less than the scheduled amount
     const result = next.debt ? applyPayment(next.debt, next.amount, next.date) : null;
     const amountDue = result ? result.paid : next.amount;
-    if (amountDue > balance) {
+    // A payment with no usable amount cannot be planned around, so the runway ends there
+    // instead of the bill silently dropping out
+    if (!Number.isFinite(amountDue) || amountDue > balance) {
       stoppedAtName = next.payment.name;
       stoppedAtDate = next.date;
       break;

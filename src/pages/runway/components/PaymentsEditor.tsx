@@ -4,6 +4,7 @@ import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { isDebtType } from '../engine/debt';
 import type { IPayment, IPaymentPlan } from '../types/IRunwayData';
+import { numberOrZero, parseNumber } from './fieldValues';
 
 interface IPaymentsEditorProps {
   items: IPayment[];
@@ -46,7 +47,11 @@ function describePlan(plan: IPaymentPlan): string | null {
   }
   const dueDates = [...plan.dueDates].sort();
   const count = dueDates.length;
-  return `Plan: $${Number(plan.amount).toFixed(2)} on ${count} date${count === 1 ? '' : 's'}, last ${dueDates[count - 1]}`;
+  const dates = `${count} date${count === 1 ? '' : 's'}, last ${dueDates[count - 1]}`;
+  if (typeof plan.amount !== 'number' || !Number.isFinite(plan.amount)) {
+    return `Plan: amount missing, ${dates}`;
+  }
+  return `Plan: $${plan.amount.toFixed(2)} on ${dates}`;
 }
 
 // A blank type removes the key rather than storing an empty string.
@@ -85,9 +90,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
             placeholder={placeholder}
             value={values.entries[index][field] ?? ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const raw = e.target.value;
-              const parsed = raw === '' ? undefined : Number(raw);
-              setFieldValue(`entries.${index}.${field}`, parsed === undefined || Number.isNaN(parsed) ? undefined : parsed);
+              setFieldValue(`entries.${index}.${field}`, parseNumber(e.target.value) ?? undefined);
             }}
             onBlur={commitOnBlur}
           />
@@ -121,9 +124,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                           name={`entries.${index}.amount`}
                           placeholder="Amount"
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            const raw = e.target.value;
-                            const parsed = raw === '' ? 0 : Number(raw);
-                            setFieldValue(`entries.${index}.amount`, Number.isNaN(parsed) ? 0 : parsed);
+                            setFieldValue(`entries.${index}.amount`, numberOrZero(e.target.value));
                           }}
                           onBlur={commitOnBlur}
                         />
@@ -134,9 +135,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                           name={`entries.${index}.day`}
                           placeholder="Day"
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            const raw = e.target.value;
-                            const parsed = raw === '' ? 0 : Number(raw);
-                            setFieldValue(`entries.${index}.day`, Number.isNaN(parsed) ? 0 : parsed);
+                            setFieldValue(`entries.${index}.day`, numberOrZero(e.target.value));
                           }}
                           onBlur={commitOnBlur}
                         />
@@ -166,6 +165,9 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                           size="small"
                           name={`entries.${index}.creditor`}
                           placeholder="Creditor"
+                          // Controlled even when the key is absent, so a removed row's text can
+                          // never linger in the row that moves up into its place
+                          value={entry.creditor ?? ''}
                           onBlur={commitOnBlur}
                         />
                         <Field
@@ -173,6 +175,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                           size="small"
                           name={`entries.${index}.note`}
                           placeholder="Note"
+                          value={entry.note ?? ''}
                           sx={{ minWidth: 200 }}
                           onBlur={commitOnBlur}
                         />

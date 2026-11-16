@@ -66,6 +66,10 @@ export function projectPayoff(
 
   let due = getNextDueDate(payment, today);
   while (due && Temporal.PlainDate.compare(due.date, maxDate) <= 0) {
+    // A payment with no usable amount never reduces the balance
+    if (!Number.isFinite(due.amount)) {
+      return { status: 'neverPaysOff' };
+    }
     const result = applyPayment(debt, due.amount, due.date);
     if (result.paidOff) {
       return { status: 'paidOff', date: due.date };

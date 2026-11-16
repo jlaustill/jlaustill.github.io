@@ -3,6 +3,7 @@ import * as Yup from 'yup';
 import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { ICashOnHandEntry } from '../types/IRunwayData';
+import { numberOrZero } from './fieldValues';
 
 interface ICashOnHandEditorProps {
   items: ICashOnHandEntry[];
@@ -53,9 +54,7 @@ const CashOnHandEditor = ({ items, onChange }: ICashOnHandEditorProps) => {
                         name={`entries.${index}.amount`}
                         placeholder="Amount"
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const raw = e.target.value;
-                          const parsed = raw === '' ? 0 : Number(raw);
-                          setFieldValue(`entries.${index}.amount`, Number.isNaN(parsed) ? 0 : parsed);
+                          setFieldValue(`entries.${index}.amount`, numberOrZero(e.target.value));
                         }}
                         onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                           handleBlur(e);

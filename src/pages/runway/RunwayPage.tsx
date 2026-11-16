@@ -11,15 +11,31 @@ import RecurringIncomeEditor from './components/RecurringIncomeEditor';
 import RunwaySchedule from './components/RunwaySchedule';
 import RunwaySummary from './components/RunwaySummary';
 import { calculateRunway } from './engine/runwayEngine';
+import type { IRunwayData } from './types/IRunwayData';
 
 export const RunwayApp = () => {
   const { data, error, fileName, canSave, load, save, setData } = useRunwayFile();
   const today = useMemo(() => Temporal.Now.plainDateISO(), []);
 
-  const result = useMemo(() => {
+  // The engine runs during render, so a failure is caught here: an error on screen keeps the
+  // editors and Save available instead of unmounting the page and losing unsaved edits.
+  const calculation = useMemo(() => {
     if (!data) return null;
-    return calculateRunway(data, today);
+    try {
+      return { result: calculateRunway(data, today), error: null };
+    } catch (err) {
+      return { result: null, error: err instanceof Error ? err.message : String(err) };
+    }
   }, [data, today]);
+  const result = calculation?.result ?? null;
+
+  // A blur that changed nothing hands back an equal list (Formik keeps its own deep copy, so it
+  // is never the same object). Treating that as an edit would re-run a ten-year projection on
+  // every Tab, so a list whose saved form would be identical is not an edit.
+  const update = <K extends keyof IRunwayData>(key: K) => (next: IRunwayData[K]) => {
+    if (!data || JSON.stringify(data[key]) === JSON.stringify(next)) return;
+    setData({ ...data, [key]: next });
+  };
 
   return (
     <Box>
@@ -47,22 +63,13 @@ export const RunwayApp = () => {
       )}
       {data && (
         <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <CashOnHandEditor
-            items={data.cashOnHand}
-            onChange={(cashOnHand) => setData({ ...data, cashOnHand })}
-          />
-          <RecurringIncomeEditor
-            items={data.recurringIncome}
-            onChange={(recurringIncome) => setData({ ...data, recurringIncome })}
-          />
-          <ExpectedInflowsEditor
-            items={data.expectedInflows}
-            onChange={(expectedInflows) => setData({ ...data, expectedInflows })}
-          />
-          <PaymentsEditor
-            items={data.payments}
-            onChange={(payments) => setData({ ...data, payments })}
-          />
+          <CashOnHandEditor items={data.cashOnHand} onChange={update('cashOnHand')} />
+          <RecurringIncomeEditor items={data.recurringIncome} onChange={update('recurringIncome')} />
+          <ExpectedInflowsEditor items={data.expectedInflows} onChange={update('expectedInflows')} />
+          <PaymentsEditor items={data.payments} onChange={update('payments')} />
+          {calculation?.error && (
+            <Alert severity="error">Could not calculate the runway: {calculation.error}</Alert>
+          )}
           {result && <RunwaySummary result={result} />}
           {result && <RunwaySchedule result={result} today={today} />}
         </Box>

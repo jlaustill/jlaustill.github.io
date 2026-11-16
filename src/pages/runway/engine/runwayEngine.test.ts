@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { calculateRunway } from './runwayEngine';
-import type { IRunwayData } from '../types/IRunwayData';
+import type { IPayment, IRunwayData } from '../types/IRunwayData';
 import type { IScheduledTransaction } from '../types/IRunwayResult';
 
 const date = (isoDate: string) => Temporal.PlainDate.from(isoDate);
@@ -148,6 +148,40 @@ describe('calculateRunway', () => {
     );
     expect(result.scheduled).toEqual([]);
     expect(result.runwayEndDate).toBeNull();
+  });
+
+  it('ends the runway at a payment whose amount is missing, instead of skipping it', () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 1000 }],
+        payments: [{ name: 'Mystery', day: 20 } as unknown as IPayment],
+      }),
+      today,
+    );
+    expect(result.stoppedAtName).toBe('Mystery');
+    expect(result.runwayEndDate?.toString()).toBe('2026-11-19');
+    expect(result.lowestBalance.amount).toBe(1000);
+  });
+
+  it('ends the runway at a plan payment whose amount is missing', () => {
+    const result = calculateRunway(
+      runwayData({
+        cashOnHand: [{ name: 'Checking', amount: 1000 }],
+        payments: [{ name: 'Plan', amount: 0, day: 12, paymentPlan: { dueDates: ['2026-12-12'] } } as unknown as IPayment],
+      }),
+      today,
+    );
+    expect(result.stoppedAtName).toBe('Plan');
+    expect(result.runwayEndDate?.toString()).toBe('2026-12-11');
+  });
+
+  it('reads a payment day of 0 as the 1st instead of failing', () => {
+    const result = calculateRunway(
+      runwayData({ cashOnHand: [{ name: 'Checking', amount: 1000 }], payments: [{ name: 'Rent', amount: 100, day: 0 }] }),
+      today,
+      2,
+    );
+    expect(rows(result.scheduled)[0]).toEqual(['2026-12-01', 'Rent', -100]);
   });
 
   it('keeps open-ended income inside the horizon', () => {

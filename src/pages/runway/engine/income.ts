@@ -1,9 +1,11 @@
 import { Temporal } from '@js-temporal/polyfill';
-import { getNextMonthlyDate, getNextWeeklyDate, lastDayOfMonth, parseIsoDate } from './calendar';
+import { byDate, getNextMonthlyDate, getNextWeeklyDate, lastDayOfMonth, parseIsoDate } from './calendar';
 import type { IExpectedInflow, IRecurringIncome } from '../types/IRunwayData';
 import type { IScheduledTransaction } from '../types/IRunwayResult';
 
-const byDate = (a: IScheduledTransaction, b: IScheduledTransaction) => Temporal.PlainDate.compare(a.date, b.date);
+const KNOWN_SCHEDULES = new Set(['semi-monthly', 'monthly', 'weekly']);
+
+const isAbsent = (value: unknown) => value === undefined || value === null || value === '';
 
 const laterOf = (a: Temporal.PlainDate, b: Temporal.PlainDate) => (Temporal.PlainDate.compare(a, b) >= 0 ? a : b);
 const earlierOf = (a: Temporal.PlainDate, b: Temporal.PlainDate) => (Temporal.PlainDate.compare(a, b) <= 0 ? a : b);
@@ -37,12 +39,21 @@ export function generateIncomeDeposits(
   const deposits: IScheduledTransaction[] = [];
 
   for (const source of income) {
+    // A schedule the engine does not know (quarterly, yearly, missing) is not guessed at
+    if (!KNOWN_SCHEDULES.has(source.schedule)) {
+      continue;
+    }
     const days = validDays(source);
     if (days.length === 0 || typeof source.amount !== 'number' || source.amount <= 0) {
       continue;
     }
     const startDate = parseIsoDate(source.startDate);
     const endDate = parseIsoDate(source.endDate);
+    // A start or end date that is present but unreadable could mean anything, so the income
+    // counts for nothing rather than for ten years
+    if ((!isAbsent(source.startDate) && !startDate) || (!isAbsent(source.endDate) && !endDate)) {
+      continue;
+    }
     const lastDate = endDate ? earlierOf(endDate, maxDate) : maxDate;
 
     let payday = nextPayday(source, days, startDate ? laterOf(startDate, today) : today);

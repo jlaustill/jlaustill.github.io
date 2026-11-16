@@ -43,6 +43,11 @@ export const liveShapedFile = {
       note: 'Net pay',
       updatedAt: '2026-11-01',
     },
+    // Shapes a hand edit can leave behind. The page must save each one back exactly as it was.
+    { name: 'Odd days', amount: 100, schedule: 'monthly', days: [1, 15, 32] },
+    { name: 'Weekly gig', amount: 50, schedule: 'weekly', days: [1, 15] },
+    { name: 'Text days', amount: 75, schedule: 'semi-monthly', days: ['1', '15'] },
+    { name: 'Odd schedule', amount: 60, schedule: 'quarterly', days: [1], endDate: '2027-03' },
   ],
   payments: [
     {

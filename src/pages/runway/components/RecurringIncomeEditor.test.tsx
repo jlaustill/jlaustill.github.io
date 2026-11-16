@@ -52,6 +52,30 @@ describe('RecurringIncomeEditor', () => {
     }
   });
 
+  it('leaves paydays it would not accept untouched when only tabbed through', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(<RecurringIncomeEditor items={[{ ...salary, days: [1, 15, 32] }]} onChange={handleChange} />);
+
+    await user.click(screen.getByDisplayValue('1, 15, 32'));
+    await user.tab();
+
+    expect(handleChange).not.toHaveBeenCalled();
+  });
+
+  it('keeps both paydays when the schedule is switched to weekly and back', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(<RecurringIncomeEditor items={[salary]} onChange={handleChange} />);
+
+    await user.selectOptions(screen.getByDisplayValue('semi-monthly'), 'weekly');
+    await user.click(screen.getByDisplayValue('1, 15'));
+    await user.tab();
+    await user.selectOptions(screen.getByDisplayValue('weekly'), 'semi-monthly');
+
+    expect(handleChange.mock.calls[handleChange.mock.calls.length - 1][0]).toEqual([salary]);
+  });
+
   it('adds a new income with twice-monthly paydays', async () => {
     const handleChange = vi.fn();
     const user = userEvent.setup();

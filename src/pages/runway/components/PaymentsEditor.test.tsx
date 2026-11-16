@@ -171,6 +171,29 @@ describe('PaymentsEditor editing', () => {
     expect(lastPayload(handleChange)).toEqual([pension]);
   });
 
+  it("shows the surviving row's own creditor and note after a row above it is removed", async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    const withDetails = { name: 'First', amount: 100, day: 1, creditor: 'Example Lender', note: 'Call first' };
+    const plain = { name: 'Second', amount: 200, day: 2 };
+    render(<PaymentsEditor items={[withDetails, plain]} onChange={handleChange} />);
+
+    await user.click(screen.getAllByLabelText('Remove')[0]);
+
+    expect((screen.getByPlaceholderText('Creditor') as HTMLInputElement).value).toBe('');
+    expect((screen.getByPlaceholderText('Note') as HTMLInputElement).value).toBe('');
+    await user.type(screen.getByPlaceholderText('Creditor'), 'X');
+    await user.tab();
+    expect(lastPayload(handleChange)).toEqual([{ ...plain, creditor: 'X' }]);
+  });
+
+  it('says a plan is missing its amount instead of showing $NaN', () => {
+    const plan = { name: 'Plan', amount: 0, day: 6, paymentPlan: { dueDates: ['2027-01-06', '2027-02-06'] } };
+    render(<PaymentsEditor items={[plan as unknown as IPayment]} onChange={() => {}} />);
+
+    expect(screen.getByText('Plan: amount missing, 2 dates, last 2027-02-06')).toBeInTheDocument();
+  });
+
   it("keeps the next row's hidden fields when a row is removed", async () => {
     const handleChange = vi.fn();
     const user = userEvent.setup();

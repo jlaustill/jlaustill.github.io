@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { generateIncomeDeposits, generateInflowDeposits } from './income';
-import type { IExpectedInflow, IRecurringIncome } from '../types/IRunwayData';
+import type { IExpectedInflow, IRecurringIncome, TIncomeSchedule } from '../types/IRunwayData';
 import type { IScheduledTransaction } from '../types/IRunwayResult';
 
 const date = (isoDate: string) => Temporal.PlainDate.from(isoDate);
@@ -107,6 +107,21 @@ describe('generateIncomeDeposits', () => {
     ['an amount of 0', salary({ amount: 0 })],
   ])('produces nothing for income with %s', (_label, income) => {
     expect(generateIncomeDeposits([income], date('2026-11-16'), date('2027-11-16'))).toEqual([]);
+  });
+
+  it.each([
+    ['a month where the end date should be', salary({ endDate: '2027-03' })],
+    ['an impossible end date', salary({ endDate: '2027-02-30' })],
+    ['an approximate start date', salary({ startDate: '~2027' })],
+    ['a schedule it does not know', salary({ schedule: 'quarterly' as TIncomeSchedule })],
+    ['no schedule at all', { name: 'Salary', amount: 2500, days: [1, 15] } as unknown as IRecurringIncome],
+  ])('counts nothing for income with %s, rather than guessing', (_label, income) => {
+    expect(generateIncomeDeposits([income], date('2026-11-16'), date('2027-11-16'))).toEqual([]);
+  });
+
+  it('treats an empty end date as no end date', () => {
+    const deposits = generateIncomeDeposits([salary({ endDate: '' })], date('2026-11-16'), date('2027-02-16'));
+    expect(deposits).toHaveLength(6);
   });
 });
 

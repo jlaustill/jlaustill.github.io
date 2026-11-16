@@ -1,8 +1,21 @@
 import { Temporal } from '@js-temporal/polyfill';
 
+export const byDate = (a: { date: Temporal.PlainDate }, b: { date: Temporal.PlainDate }) =>
+  Temporal.PlainDate.compare(a.date, b.date);
+
+// A day that is missing, fractional or out of range must never throw: it is read as the nearest
+// real day, and anything below 1 as the 1st, the earliest (most conservative) day for a bill.
+function usableDay(day: number): number {
+  if (!Number.isFinite(day)) {
+    return 1;
+  }
+  return Math.min(Math.max(Math.trunc(day), 1), 31);
+}
+
 // The first occurrence of `day` on or after `onOrAfter`, clamped to the length of short months.
 export function getNextMonthlyDate(day: number, onOrAfter: Temporal.PlainDate): Temporal.PlainDate {
-  const inMonth = (month: Temporal.PlainDate) => month.with({ day: Math.min(day, month.daysInMonth) });
+  const target = usableDay(day);
+  const inMonth = (month: Temporal.PlainDate) => month.with({ day: Math.min(target, month.daysInMonth) });
   const thisMonth = inMonth(onOrAfter);
   if (Temporal.PlainDate.compare(thisMonth, onOrAfter) >= 0) {
     return thisMonth;

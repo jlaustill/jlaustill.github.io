@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Button, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import { Temporal } from '@js-temporal/polyfill';
+import { roundToCents } from '../engine/money';
 import type { IRunwayResult } from '../types/IRunwayResult';
 
 interface IRunwayScheduleProps {
@@ -18,7 +19,7 @@ const RunwaySchedule = ({ result, today }: IRunwayScheduleProps) => {
   // The running balance is computed over every row, so hiding later rows never changes it.
   let runningBalance = result.startingBalance;
   const rows = result.scheduled.map((transaction) => {
-    runningBalance = Math.round((runningBalance + transaction.amount) * 100) / 100;
+    runningBalance = roundToCents(runningBalance + transaction.amount);
     return { transaction, balance: runningBalance };
   });
   const inWindow = rows.filter((row) => Temporal.PlainDate.compare(row.transaction.date, windowEnd) <= 0);

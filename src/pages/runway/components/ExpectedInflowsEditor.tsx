@@ -3,6 +3,7 @@ import * as Yup from 'yup';
 import { Box, Button, Checkbox, FormControlLabel, IconButton, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { IExpectedInflow } from '../types/IRunwayData';
+import { blankToNull, parseNumber } from './fieldValues';
 
 interface IExpectedInflowsEditorProps {
   items: IExpectedInflow[];
@@ -22,7 +23,6 @@ const expectedInflowsSchema = Yup.object({
 
 // A blank field means "not known yet", which the engine never counts. It must never become 0
 // or an empty string.
-const blankToNull = (raw: string) => (raw === '' ? null : raw);
 
 const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps) => {
   return (
@@ -58,9 +58,7 @@ const ExpectedInflowsEditor = ({ items, onChange }: IExpectedInflowsEditorProps)
                       placeholder="Amount"
                       value={entry.amount ?? ''}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        const raw = e.target.value;
-                        const parsed = raw === '' ? null : Number(raw);
-                        setFieldValue(`entries.${index}.amount`, parsed === null || Number.isNaN(parsed) ? null : parsed);
+                        setFieldValue(`entries.${index}.amount`, parseNumber(e.target.value));
                       }}
                       onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                         handleBlur(e);

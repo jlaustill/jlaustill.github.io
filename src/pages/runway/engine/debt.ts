@@ -1,4 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill';
+import { roundToCents } from './money';
 
 export type TDebtField = 'balance' | 'interestRate' | 'escrow';
 
@@ -66,10 +67,6 @@ export function createDebt(values: IDebtValues, asOf: Temporal.PlainDate): IDebt
     escrow: values.escrow ?? 0,
     accruedThrough: asOf,
   };
-}
-
-function roundToCents(amount: number): number {
-  return Math.round(amount * 100) / 100;
 }
 
 // Interest accrues daily at rate / 365 from the last payment (or from the day the balance was
