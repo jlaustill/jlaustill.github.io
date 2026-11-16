@@ -7,6 +7,7 @@ import RunwaySkeleton from './RunwaySkeleton';
 import CashOnHandEditor from './components/CashOnHandEditor';
 import ExpectedInflowsEditor from './components/ExpectedInflowsEditor';
 import PaymentsEditor from './components/PaymentsEditor';
+import RecurringIncomeEditor from './components/RecurringIncomeEditor';
 import RunwaySchedule from './components/RunwaySchedule';
 import { calculateRunway } from './engine/runwayEngine';
 
@@ -48,6 +49,10 @@ export const RunwayApp = () => {
           <CashOnHandEditor
             items={data.cashOnHand}
             onChange={(cashOnHand) => setData({ ...data, cashOnHand })}
+          />
+          <RecurringIncomeEditor
+            items={data.recurringIncome}
+            onChange={(recurringIncome) => setData({ ...data, recurringIncome })}
           />
           <ExpectedInflowsEditor
             items={data.expectedInflows}

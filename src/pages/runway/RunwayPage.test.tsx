@@ -39,10 +39,11 @@ describe('RunwayApp integration', () => {
     await user.click(screen.getByText('Open runway.json'));
 
     // Wait for the async file load to land real IRunwayData in state, wiring
-    // CashOnHandEditor, PaymentsEditor and RunwaySchedule together exactly the way
-    // RunwayPage.tsx composes them.
+    // CashOnHandEditor, RecurringIncomeEditor, PaymentsEditor and RunwaySchedule together
+    // exactly the way RunwayPage.tsx composes them.
     expect(await screen.findByDisplayValue('Checking')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Rent')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Paycheck')).toBeInTheDocument();
 
     // The Cash on Hand amount field is the first "Amount" field on the page
     // (CashOnHandEditor renders before the other editors).
