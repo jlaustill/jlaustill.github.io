@@ -9,6 +9,7 @@ import ExpectedInflowsEditor from './components/ExpectedInflowsEditor';
 import PaymentsEditor from './components/PaymentsEditor';
 import RecurringIncomeEditor from './components/RecurringIncomeEditor';
 import RunwaySchedule from './components/RunwaySchedule';
+import RunwaySummary from './components/RunwaySummary';
 import { calculateRunway } from './engine/runwayEngine';
 
 export const RunwayApp = () => {
@@ -62,7 +63,8 @@ export const RunwayApp = () => {
             items={data.payments}
             onChange={(payments) => setData({ ...data, payments })}
           />
-          {result && <RunwaySchedule result={result} />}
+          {result && <RunwaySummary result={result} />}
+          {result && <RunwaySchedule result={result} today={today} />}
         </Box>
       )}
     </Box>
