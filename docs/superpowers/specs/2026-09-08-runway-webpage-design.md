@@ -56,7 +56,7 @@ The prerendered/SSR output is `RunwaySkeleton`. Once the client mounts, `useBrow
 
 ## Data Model
 
-Adopts the current richer `runway.json` shape (from the `new_job` repo's live file) as the canonical schema going forward, superseding the CLI's simpler `{cashOnHand: number, payments: [{name,amount,day}]}` shape.
+Adopts the current richer `runway.json` shape (from the owner's live data file) as the canonical schema going forward, superseding the CLI's simpler `{cashOnHand: number, payments: [{name,amount,day}]}` shape.
 
 ```typescript
 interface ICashOnHandEntry {

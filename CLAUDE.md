@@ -32,3 +32,10 @@ This is a React 19 + TypeScript + Vite personal website/portfolio hosted on GitH
 - ESLint flat config with TypeScript and React hooks/refresh plugins
 - Default exports at bottom of files
 - Type prefixes: `I` for interfaces, `E` for enums, `T` for types
+
+## Runway page (`src/pages/runway/`)
+
+- Fixtures, examples and docs for the runway page always use made-up data: generic names (`Checking`, `Card`, `Example Bank`) and round numbers. Never copy a real `runway.json` into this repo, and never paste values from one into a test, doc, commit message or PR.
+- The real file lives outside this repo. A local-only check reads it in place: `RUNWAY_FILE=<path> npx vitest run src/pages/runway/realFile.check.test.ts`, which is skipped when the variable is unset.
+- `runway.json` is in `.gitignore` as a backstop.
+- CI only runs `npm run build`; run `npx vitest run` and `npm run lint` locally before pushing.
