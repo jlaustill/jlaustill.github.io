@@ -12,6 +12,15 @@ interface IUseRunwayFileResult {
   setData: (data: IRunwayData) => void;
 }
 
+// Chrome and Edge ship with the File System Access API on. Brave ships with it off behind a
+// flag, so a Brave user is told exactly which setting to change.
+function fileAccessUnavailableMessage(): string {
+  if ('brave' in navigator) {
+    return 'Brave has local file access turned off. Open brave://flags/#file-system-access-api, set it to Enabled, relaunch Brave, and try again.';
+  }
+  return 'This browser cannot open local files from a web page. Use Chrome or Edge, or Brave with brave://flags/#file-system-access-api enabled.';
+}
+
 function useRunwayFile(): IUseRunwayFileResult {
   const [handle, setHandle] = useState<FileSystemFileHandle | null>(null);
   const [data, setDataState] = useState<IRunwayData | null>(null);
@@ -21,7 +30,7 @@ function useRunwayFile(): IUseRunwayFileResult {
   const load = useCallback(async () => {
     setError(null);
     if (!('showOpenFilePicker' in window)) {
-      setError('This tool needs a Chromium browser (Chrome, Edge, or Brave) to open local files.');
+      setError(fileAccessUnavailableMessage());
       return;
     }
     try {
