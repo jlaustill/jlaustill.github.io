@@ -8,7 +8,7 @@ import CashOnHandEditor from './components/CashOnHandEditor';
 import ExpectedInflowsEditor from './components/ExpectedInflowsEditor';
 import PaymentsEditor from './components/PaymentsEditor';
 import RecurringIncomeEditor from './components/RecurringIncomeEditor';
-import RunwaySchedule from './components/RunwaySchedule';
+import NextDaysCard from './components/NextDaysCard';
 import RunwaySummary from './components/RunwaySummary';
 import { calculateRunway } from './engine/runwayEngine';
 import type { IRunwayData } from './types/IRunwayData';
@@ -68,7 +68,7 @@ export const RunwayApp = () => {
             <Alert severity="error">Could not calculate the runway: {calculation.error}</Alert>
           )}
           {result && <RunwaySummary result={result} />}
-          {result && <RunwaySchedule result={result} today={today} />}
+          {result && <NextDaysCard result={result} today={today} />}
         </Box>
       )}
     </Box>

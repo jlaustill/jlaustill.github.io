@@ -3,6 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RunwayApp } from './RunwayPage';
 import type { IRunwayData } from './types/IRunwayData';
+import { parseMoneyInput } from './format';
 
 // Seed data deliberately makes the "Rent" payment unaffordable (far larger than starting
 // cash plus any paycheck before it), so the schedule stops at the first rent. That keeps the
@@ -63,7 +64,7 @@ describe('RunwayApp integration', () => {
 
     // The page must still be fully mounted -- not replaced by React's uncaught-error
     // unmount -- and the schedule must have recomputed off the new (numeric) data.
-    expect(screen.getByText('Projected Schedule')).toBeInTheDocument();
+    expect(screen.getByText('Next 60 days')).toBeInTheDocument();
 
     // Prove the recomputed schedule is carrying real numbers end to end (data ->
     // editor onChange -> setData -> calculateRunway -> RunwaySchedule),
@@ -76,8 +77,8 @@ describe('RunwayApp integration', () => {
       const cells = within(row).getAllByRole('cell');
       const amountText = cells[2].textContent ?? '';
       const balanceText = cells[3].textContent ?? '';
-      const amount = Number(amountText);
-      const balance = Number(balanceText);
+      const amount = parseMoneyInput(amountText) ?? Number.NaN;
+      const balance = parseMoneyInput(balanceText) ?? Number.NaN;
 
       expect(Number.isNaN(amount)).toBe(false);
       expect(Number.isNaN(balance)).toBe(false);
