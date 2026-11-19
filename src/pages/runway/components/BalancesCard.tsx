@@ -50,6 +50,11 @@ const BalanceField = ({ amount, onCommit }: IBalanceFieldProps) => {
       value={text}
       onChange={(event) => setText(event.target.value)}
       onBlur={() => {
+        // Untouched text commits nothing: a stored amount the field shows rounded (fractions of
+        // a cent, no amount at all) must not be saved rounded just by tabbing through.
+        if (text === shown) {
+          return;
+        }
         const parsed = parseMoneyInput(text);
         if (parsed === null || parsed === amount) {
           setText(shown);

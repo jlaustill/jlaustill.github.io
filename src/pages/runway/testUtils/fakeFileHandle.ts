@@ -10,7 +10,13 @@ export interface IFakeFile {
   failNextWrite(): void;
   setPermission(state: PermissionState): void;
   onNextClose(callback: () => void): void;
+  // Makes the next read of this kind wait until the returned function is called, so a test can
+  // choose the order in which overlapping file operations finish. The read answers with the file
+  // as it is when released.
+  holdNext(kind: TRead): () => void;
 }
+
+type TRead = 'getFile' | 'text';
 
 export function createFakeFile(text: string, options: { permission?: PermissionState } = {}): IFakeFile {
   let contents = text;
@@ -19,11 +25,28 @@ export function createFakeFile(text: string, options: { permission?: PermissionS
   let failNext = false;
   let afterClose: (() => void) | null = null;
   const writes: string[] = [];
+  const holds: Record<TRead, Promise<void>[]> = { getFile: [], text: [] };
+  const waitIfHeld = async (kind: TRead) => {
+    const hold = holds[kind].shift();
+    if (hold) {
+      await hold;
+    }
+  };
 
   const handle = {
     kind: 'file',
     name: 'runway.json',
-    getFile: async () => ({ name: 'runway.json', lastModified, text: async () => contents }),
+    getFile: async () => {
+      await waitIfHeld('getFile');
+      return {
+        name: 'runway.json',
+        lastModified,
+        text: async () => {
+          await waitIfHeld('text');
+          return contents;
+        },
+      };
+    },
     queryPermission: async () => permission,
     requestPermission: async () => permission,
     createWritable: async () => {
@@ -65,6 +88,15 @@ export function createFakeFile(text: string, options: { permission?: PermissionS
     },
     onNextClose: (callback) => {
       afterClose = callback;
+    },
+    holdNext: (kind) => {
+      let release = () => {};
+      holds[kind].push(
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+      );
+      return () => release();
     },
   };
 }

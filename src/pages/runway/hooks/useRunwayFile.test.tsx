@@ -27,6 +27,34 @@ const advance = (ms: number) =>
     await vi.advanceTimersByTimeAsync(ms);
   });
 
+const linksAdded: { remove: () => void }[] = [];
+
+// A link to another page of the site. jsdom cannot navigate, so a click that gets through to the
+// page is recorded as followed and then stopped.
+function addLink() {
+  const link = document.body.appendChild(document.createElement('a'));
+  link.href = '/blog';
+  let followed = false;
+  const follow = (event: Event) => {
+    followed = !event.defaultPrevented;
+    event.preventDefault();
+  };
+  document.addEventListener('click', follow);
+  const added = {
+    click() {
+      followed = false;
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
+      return followed;
+    },
+    remove() {
+      document.removeEventListener('click', follow);
+      link.remove();
+    },
+  };
+  linksAdded.push(added);
+  return added;
+}
+
 describe('useRunwayFile', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -35,6 +63,8 @@ describe('useRunwayFile', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    linksAdded.splice(0).forEach((link) => link.remove());
   });
 
   it('opens the file, shows its data, and starts out saved', async () => {
@@ -217,5 +247,109 @@ describe('useRunwayFile', () => {
     visibility.mockRestore();
 
     expect(file.writes.map(checkingIn)).toEqual([200]);
+  });
+
+  it('never writes over an outside edit that a check is still loading', async () => {
+    const file = createFakeFile(fileText(withChecking(100)));
+    const { result } = await openWith(file);
+
+    act(() => result.current.update(withChecking(200)));
+    await advance(500);
+    file.editOutside(fileText(withChecking(500)));
+    // A check reads the outside edit slowly. The save comes due meanwhile, and its own look at
+    // the file answers only after the check has finished.
+    const releaseCheckRead = file.holdNext('text');
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    const releaseSaveRead = file.holdNext('getFile');
+    await advance(SAVE_DELAY_MS);
+    releaseCheckRead();
+    await advance(0);
+    releaseSaveRead();
+    await advance(5000);
+
+    expect(file.writes).toHaveLength(0);
+    expect(checkingIn(file.currentText())).toBe(500);
+    expect(result.current.data).toEqual(withChecking(500));
+  });
+
+  it('does not take its own write for an outside edit when a check answers mid-write', async () => {
+    const file = createFakeFile(fileText(withChecking(100)));
+    const { result } = await openWith(file);
+
+    act(() => result.current.update(withChecking(200)));
+    await advance(500);
+    // A check starts just before the save comes due, and its look at the file answers while the
+    // save is finishing.
+    const releaseCheck = file.holdNext('getFile');
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    file.onNextClose(() => releaseCheck());
+    await advance(SAVE_DELAY_MS);
+    releaseCheck();
+    await advance(POLL_INTERVAL_MS);
+
+    expect(file.writes.map(checkingIn)).toEqual([200]);
+    expect(result.current.saveStatus?.kind).toBe('saved');
+  });
+
+  it('writes a waiting change when the page goes away before it is due', async () => {
+    const file = createFakeFile(fileText(withChecking(100)));
+    const { result, unmount } = await openWith(file);
+
+    act(() => result.current.update(withChecking(200)));
+    await advance(300);
+    unmount();
+    await advance(SAVE_DELAY_MS * 3);
+
+    expect(file.writes.map(checkingIn)).toEqual([200]);
+  });
+
+  it('asks before a link leaves the page with changes that cannot be saved', async () => {
+    const file = createFakeFile(fileText(withChecking(100)), { permission: 'denied' });
+    const { result } = await openWith(file);
+    const link = addLink();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    expect(link.click()).toBe(true);
+    expect(confirm).not.toHaveBeenCalled();
+
+    act(() => result.current.update(withChecking(200)));
+    expect(link.click()).toBe(false);
+    expect(confirm).toHaveBeenCalledTimes(1);
+
+    confirm.mockReturnValue(true);
+    expect(link.click()).toBe(true);
+  });
+
+  it('lets a link leave without asking when the waiting change will be saved on the way out', async () => {
+    const file = createFakeFile(fileText(withChecking(100)));
+    const { result } = await openWith(file);
+    const link = addLink();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    act(() => result.current.update(withChecking(200)));
+
+    expect(link.click()).toBe(true);
+    expect(confirm).not.toHaveBeenCalled();
+  });
+
+  it('writes a waiting change to the open file before another file is opened', async () => {
+    const file = createFakeFile(fileText(withChecking(100)));
+    const { result } = await openWith(file);
+    const other = createFakeFile(fileText(withChecking(700)));
+    stubFilePicker(other);
+
+    act(() => result.current.update(withChecking(200)));
+    await act(async () => {
+      await result.current.open();
+    });
+    await advance(SAVE_DELAY_MS * 3);
+
+    expect(file.writes.map(checkingIn)).toEqual([200]);
+    expect(other.writes).toHaveLength(0);
+    expect(result.current.data).toEqual(withChecking(700));
   });
 });

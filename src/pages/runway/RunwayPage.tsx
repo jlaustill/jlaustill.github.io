@@ -1,10 +1,28 @@
 import { useMemo, useState } from 'react';
-import { Alert, Box, Button, Chip, Grid, IconButton, Paper, Stack, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Grid,
+  IconButton,
+  Paper,
+  Stack,
+  Tab,
+  Tabs,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import { Temporal } from '@js-temporal/polyfill';
 import useBrowserSide from '../../hooks/useBrowserSide';
 import useRunwayFile from './hooks/useRunwayFile';
+import useToday from './hooks/useToday';
 import RunwaySkeleton from './RunwaySkeleton';
 import BalancesCard from './components/BalancesCard';
 import ExpectedInflowsEditor from './components/ExpectedInflowsEditor';
@@ -27,9 +45,30 @@ const TABS: { value: TTab; label: string }[] = [
 ];
 
 export const RunwayApp = () => {
-  const { data, error, fileName, saveStatus, open, update: updateData, retrySave, allowSaving } = useRunwayFile();
-  const today = useMemo(() => Temporal.Now.plainDateISO(), []);
+  const {
+    data,
+    error,
+    fileName,
+    saveStatus,
+    open,
+    update: updateData,
+    retrySave,
+    allowSaving,
+    unsavedAtRisk,
+  } = useRunwayFile();
+  const today = useToday();
   const [tab, setTab] = useState<TTab>('checkIn');
+  const [confirmingOpen, setConfirmingOpen] = useState(false);
+
+  // Opening a file replaces what is on screen, so edits that cannot be saved are only thrown
+  // away once the owner says so.
+  const openAnotherFile = () => {
+    if (unsavedAtRisk()) {
+      setConfirmingOpen(true);
+    } else {
+      void open();
+    }
+  };
 
   // The engine runs during render, so a failure is caught here: an error on screen keeps the
   // editors available instead of unmounting the page and losing unsaved edits.
@@ -83,13 +122,33 @@ export const RunwayApp = () => {
         </Typography>
         {fileName && <Chip size="small" label={fileName} />}
         <Tooltip title="Open a different file">
-          <IconButton aria-label="Open a different file" onClick={open}>
+          <IconButton aria-label="Open a different file" onClick={openAnotherFile}>
             <SwapHorizIcon />
           </IconButton>
         </Tooltip>
         <Box sx={{ flex: 1 }} />
         {saveStatus && <SaveStatusChip status={saveStatus} onRetry={retrySave} onAllow={allowSaving} />}
       </Box>
+      <Dialog open={confirmingOpen} onClose={() => setConfirmingOpen(false)}>
+        <DialogTitle>Discard changes that are not saved?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Some changes on this page are not in the file yet. Opening a file replaces them with what that file holds.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmingOpen(false)}>Cancel</Button>
+          <Button
+            color="error"
+            onClick={() => {
+              setConfirmingOpen(false);
+              void open();
+            }}
+          >
+            Discard and open
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {error && <Alert severity="error">{error}</Alert>}
       {calculation?.error && <Alert severity="error">Could not calculate the runway: {calculation.error}</Alert>}

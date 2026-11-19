@@ -57,6 +57,24 @@ describe('BalancesCard', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('leaves a balance alone when it is tabbed through, even one the field shows rounded', async () => {
+    // A hand edit can leave fractions of a cent, no amount at all, or a number written as text.
+    // Showing them rounded must not save them rounded, or date them as checked today.
+    const handEdited = [
+      { name: 'Fractions', amount: 1234.567 },
+      { name: 'Missing', amount: null },
+      { name: 'Text', amount: '25' },
+    ] as unknown as ICashOnHandEntry[];
+    const { onChange, user } = renderCard(handEdited);
+
+    for (const row of rows()) {
+      await user.click(balanceIn(row));
+      await user.tab();
+    }
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("saves a new balance with today's date, keeping fields it does not show", async () => {
     const { onChange, user } = renderCard();
 

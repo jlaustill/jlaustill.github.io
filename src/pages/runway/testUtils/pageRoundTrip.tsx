@@ -19,6 +19,9 @@ export const liveShapedFile = {
       updatedAt: '2026-11-01',
     },
     { name: 'Cash', amount: 0 },
+    // Balances a hand edit can leave behind: fractions of a cent, and no amount at all.
+    { name: 'Brokerage', amount: 1234.567, updatedAt: '2026-10-01' },
+    { name: 'Unknown', amount: null },
   ],
   expectedInflows: [
     {
@@ -120,8 +123,11 @@ type TUser = ReturnType<typeof userEvent.setup>;
 // Renders the real page and opens `fileText` from a fake file. Call
 // vi.useFakeTimers({ shouldAdvanceTime: true }) first (user-event stalls on a frozen clock):
 // saving and the outside-edit checks run on timers.
-export async function openInPage(fileText: string): Promise<{ user: TUser; file: IFakeFile }> {
-  const file = createFakeFile(fileText);
+export async function openInPage(
+  fileText: string,
+  options: { permission?: PermissionState } = {},
+): Promise<{ user: TUser; file: IFakeFile }> {
+  const file = createFakeFile(fileText, options);
   stubFilePicker(file);
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
   render(<RunwayApp />);

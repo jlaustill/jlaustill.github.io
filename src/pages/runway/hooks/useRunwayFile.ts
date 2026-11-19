@@ -20,7 +20,11 @@ interface IUseRunwayFileResult {
   update: (next: IRunwayData) => void;
   retrySave: () => Promise<void>;
   allowSaving: () => Promise<void>;
+  // True when edits on screen are not in the file and no save is coming for them.
+  unsavedAtRisk: () => boolean;
 }
+
+const LEAVE_WITH_UNSAVED_EDITS = 'Some changes on this page are not saved. Leave anyway and lose them?';
 
 // Chrome and Edge ship with the File System Access API on. Brave ships with it off behind a
 // flag, so a Brave user is told exactly which setting to change.
@@ -60,16 +64,40 @@ function useRunwayFile(): IUseRunwayFileResult {
       void controller.checkForOutsideChange();
     };
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      // A field still being typed in is committed first: closing the tab does not blur it.
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       if (controller.hasUnsaved()) {
         event.preventDefault();
       }
     };
+    // A link inside the site swaps this page out with no beforeunload. A change waiting for its
+    // delay is written on the way out (see dispose); edits that cannot be saved ask first.
+    const onClick = (event: MouseEvent) => {
+      const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+      const leavesPage =
+        link instanceof HTMLAnchorElement &&
+        link.target !== '_blank' &&
+        link.pathname !== window.location.pathname &&
+        event.button === 0 &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.shiftKey &&
+        !event.altKey;
+      if (leavesPage && controller.unsavedAtRisk() && !window.confirm(LEAVE_WITH_UNSAVED_EDITS)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
     document.addEventListener('visibilitychange', onVisibilityChange);
+    document.addEventListener('click', onClick, true);
     window.addEventListener('focus', onFocus);
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => {
       clearInterval(poll);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      document.removeEventListener('click', onClick, true);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
@@ -83,6 +111,9 @@ function useRunwayFile(): IUseRunwayFileResult {
       setError(fileAccessUnavailableMessage());
       return;
     }
+    // A change still waiting for its delay goes into the file that is open now. Opening the next
+    // file waits its turn behind that write.
+    void controller.flush();
     try {
       const [selected] = await window.showOpenFilePicker({
         types: [{ description: 'Runway JSON', accept: { 'application/json': ['.json'] } }],
@@ -101,8 +132,9 @@ function useRunwayFile(): IUseRunwayFileResult {
   const update = useCallback((next: IRunwayData) => controller.change(next), [controller]);
   const retrySave = useCallback(() => controller.writeNow(), [controller]);
   const allowSaving = useCallback(() => controller.allow(), [controller]);
+  const unsavedAtRisk = useCallback(() => controller.unsavedAtRisk(), [controller]);
 
-  return { data, error, fileName, saveStatus, open, update, retrySave, allowSaving };
+  return { data, error, fileName, saveStatus, open, update, retrySave, allowSaving, unsavedAtRisk };
 }
 
 export default useRunwayFile;

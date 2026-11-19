@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import { Temporal } from '@js-temporal/polyfill';
 import { SAVE_DELAY_MS } from './hooks/useRunwayFile';
 import { parseMoneyInput } from './format';
@@ -53,5 +53,59 @@ describe('RunwayApp', () => {
     expect(screen.getByText('$800')).toBeInTheDocument();
     await settle(SAVE_DELAY_MS);
     expect(JSON.parse(file.writes[0]).cashOnHand[0].amount).toBe(800);
+  }, 60_000);
+
+  it('dates a balance edit with the day it is made, not the day the page was opened', async () => {
+    vi.setSystemTime(new Date(2026, 10, 19, 23, 59));
+    const { user, file } = await openInPage(JSON.stringify(seed));
+    vi.setSystemTime(new Date(2026, 10, 21, 8, 0));
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    const field = within(screen.getAllByRole('listitem')[0]).getByLabelText('Balance');
+    await user.clear(field);
+    await user.type(field, '800');
+    await user.tab();
+    await settle(SAVE_DELAY_MS);
+
+    expect(JSON.parse(file.writes[0]).cashOnHand[0].updatedAt).toBe('2026-11-21');
+  }, 60_000);
+
+  it('saves a balance still being typed in when the tab is about to close', async () => {
+    const { user, file } = await openInPage(JSON.stringify(seed));
+    const field = within(screen.getAllByRole('listitem')[0]).getByLabelText('Balance');
+    await user.clear(field);
+    await user.type(field, '800');
+
+    const leaving = new Event('beforeunload', { cancelable: true });
+    act(() => {
+      window.dispatchEvent(leaving);
+    });
+
+    expect(leaving.defaultPrevented).toBe(true);
+    await settle(SAVE_DELAY_MS);
+    expect(JSON.parse(file.writes[0]).cashOnHand[0].amount).toBe(800);
+  }, 60_000);
+
+  it('asks before opening another file would throw away changes that cannot be saved', async () => {
+    const { user } = await openInPage(JSON.stringify(seed), { permission: 'denied' });
+    const picker = vi.mocked(window.showOpenFilePicker);
+    const field = within(screen.getAllByRole('listitem')[0]).getByLabelText('Balance');
+    await user.clear(field);
+    await user.type(field, '800');
+    await user.tab();
+    picker.mockClear();
+
+    await user.click(screen.getByRole('button', { name: 'Open a different file' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('not saved');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+    await settle(500);
+    expect(picker).not.toHaveBeenCalled();
+    expect(screen.getByText('$800')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Open a different file' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard and open' }));
+    expect(picker).toHaveBeenCalledTimes(1);
   }, 60_000);
 });

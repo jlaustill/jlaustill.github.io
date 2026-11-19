@@ -42,9 +42,25 @@ export function createRunwayFileController(callbacks: IFileControllerCallbacks) 
   let version = 0; // goes up on every change made on the page, and on every version loaded
   let savedVersion = 0; // the version the file on disk matches
   let timer: ReturnType<typeof setTimeout> | null = null;
-  let writing = false;
   let canWrite = false;
   let readable = true; // false while the file's newest version cannot be parsed
+  let status: TSaveStatus = { kind: 'saved', at: null };
+
+  // Every file operation runs on its own, in the order asked for. A check for outside edits and
+  // a write that overlapped could write over a version the check is still loading, or take this
+  // page's own write for an outside edit.
+  let queue: Promise<unknown> = Promise.resolve();
+  const inTurn = <T>(operation: () => Promise<T>): Promise<T> => {
+    const result = queue.then(operation);
+    queue = result.catch(() => undefined);
+    return result;
+  };
+  let waitingCheck: Promise<void> | null = null;
+
+  const report = (next: TSaveStatus) => {
+    status = next;
+    callbacks.onStatus(next);
+  };
 
   const hasUnsaved = () => version !== savedVersion;
 
@@ -59,7 +75,7 @@ export function createRunwayFileController(callbacks: IFileControllerCallbacks) 
     cancelTimer();
     timer = setTimeout(() => {
       timer = null;
-      void writeNow();
+      void inTurn(write);
     }, SAVE_DELAY_MS);
   };
 
@@ -82,23 +98,21 @@ export function createRunwayFileController(callbacks: IFileControllerCallbacks) 
     } catch {
       readable = false;
       cancelTimer();
-      callbacks.onStatus({ kind: 'unreadable' });
+      report({ kind: 'unreadable' });
       return;
     }
     show(parsed, file.lastModified);
-    callbacks.onStatus({ kind: 'updatedFromDisk', at: new Date() });
+    report({ kind: 'updatedFromDisk', at: new Date() });
   };
 
-  async function writeNow(): Promise<void> {
+  // Writes the newest version, unless the file changed since it was last read: then the version
+  // on disk is loaded instead, because it wins. A change made during the write keeps its own
+  // timer and goes in the next write.
+  async function write(): Promise<void> {
     cancelTimer();
     if (!handle || !latest || !canWrite || !readable || !hasUnsaved()) {
       return;
     }
-    if (writing) {
-      schedule(); // a write is already in flight; this change goes in the next one
-      return;
-    }
-    writing = true;
     const writingVersion = version;
     const text = serializeRunwayData(latest);
     try {
@@ -125,26 +139,53 @@ export function createRunwayFileController(callbacks: IFileControllerCallbacks) 
       lastModified = after.lastModified;
       if (version === writingVersion) {
         savedVersion = writingVersion;
-        callbacks.onStatus({ kind: 'saved', at: new Date() });
+        report({ kind: 'saved', at: new Date() });
       }
     } catch (err) {
-      callbacks.onStatus({ kind: 'error', message: errorMessage(err) });
-    } finally {
-      writing = false;
+      report({ kind: 'error', message: errorMessage(err) });
     }
   }
+
+  async function check(): Promise<void> {
+    if (!handle) {
+      return;
+    }
+    try {
+      const file = await handle.getFile();
+      if (file.lastModified !== lastModified) {
+        await loadOutsideVersion(file);
+      }
+    } catch (err) {
+      report({ kind: 'error', message: errorMessage(err) });
+    }
+  }
+
+  // Writes a change waiting for its delay right away.
+  const flush = (): Promise<void> => {
+    if (timer === null) {
+      return Promise.resolve();
+    }
+    cancelTimer();
+    return inTurn(write);
+  };
 
   return {
     hasUnsaved,
 
-    async opened(selected: FileSystemFileHandle, writable: boolean): Promise<string> {
-      const file = await selected.getFile();
-      const parsed = parseRunwayData(await file.text());
-      handle = selected;
-      canWrite = writable;
-      show(parsed, file.lastModified);
-      callbacks.onStatus(writable ? { kind: 'saved', at: null } : { kind: 'readOnly' });
-      return file.name;
+    // True when edits on screen are not in the file and no save is coming for them: saving is
+    // off, the last save failed, or the file's newest version cannot be read.
+    unsavedAtRisk: () => hasUnsaved() && (!canWrite || !readable || status.kind === 'error'),
+
+    opened(selected: FileSystemFileHandle, writable: boolean): Promise<string> {
+      return inTurn(async () => {
+        const file = await selected.getFile();
+        const parsed = parseRunwayData(await file.text());
+        handle = selected;
+        canWrite = writable;
+        show(parsed, file.lastModified);
+        report(writable ? { kind: 'saved', at: null } : { kind: 'readOnly' });
+        return file.name;
+      });
     },
 
     change(next: IRunwayData): void {
@@ -155,55 +196,58 @@ export function createRunwayFileController(callbacks: IFileControllerCallbacks) 
         return; // the status already says the file can't be read
       }
       if (!canWrite) {
-        callbacks.onStatus({ kind: 'readOnly' });
+        report({ kind: 'readOnly' });
         return;
       }
-      callbacks.onStatus({ kind: 'saving' });
+      report({ kind: 'saving' });
       schedule();
     },
 
-    writeNow,
+    writeNow: (): Promise<void> => inTurn(write),
 
-    async checkForOutsideChange(): Promise<void> {
-      if (!handle || writing) {
-        return;
+    checkForOutsideChange(): Promise<void> {
+      // One waiting check is enough: it reads the file when its turn comes.
+      if (waitingCheck === null) {
+        waitingCheck = inTurn(async () => {
+          waitingCheck = null;
+          await check();
+        });
       }
-      try {
-        const file = await handle.getFile();
-        if (file.lastModified !== lastModified) {
-          await loadOutsideVersion(file);
-        }
-      } catch (err) {
-        callbacks.onStatus({ kind: 'error', message: errorMessage(err) });
-      }
+      return waitingCheck;
     },
 
     async allow(): Promise<void> {
-      if (!handle) {
+      const asking = handle;
+      if (!asking) {
         return;
       }
-      canWrite = await requestWrite(handle);
+      // Asked at once, while the click still counts: waiting for a file operation first could
+      // outlast it.
+      const granted = await requestWrite(asking);
+      if (asking !== handle) {
+        return; // another file was opened meanwhile
+      }
+      canWrite = granted;
       if (!canWrite) {
-        callbacks.onStatus({ kind: 'readOnly' });
+        report({ kind: 'readOnly' });
         return;
       }
       if (hasUnsaved()) {
-        callbacks.onStatus({ kind: 'saving' });
-        await writeNow();
+        report({ kind: 'saving' });
+        await inTurn(write);
       } else {
-        callbacks.onStatus({ kind: 'saved', at: null });
+        report({ kind: 'saved', at: null });
       }
     },
 
-    // Writes a waiting change right away, for when the page is about to be hidden.
-    flush(): void {
-      if (timer !== null) {
-        cancelTimer();
-        void writeNow();
-      }
-    },
+    // For when the page is about to be hidden, or another file is about to be opened.
+    flush,
 
-    dispose: cancelTimer,
+    // The page is going away, perhaps through a link within a second of an edit: a waiting
+    // change is written rather than dropped.
+    dispose(): void {
+      void flush();
+    },
   };
 }
 
