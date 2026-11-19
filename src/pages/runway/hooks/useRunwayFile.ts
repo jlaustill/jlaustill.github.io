@@ -1,15 +1,25 @@
-import { useCallback, useState } from 'react';
-import { parseRunwayData, serializeRunwayData } from './runwayFileIO';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  createRunwayFileController,
+  POLL_INTERVAL_MS,
+  requestWrite,
+  SAVE_DELAY_MS,
+  type TSaveStatus,
+} from './runwayFileController';
 import type { IRunwayData } from '../types/IRunwayData';
+
+export { POLL_INTERVAL_MS, SAVE_DELAY_MS };
+export type { TSaveStatus };
 
 interface IUseRunwayFileResult {
   data: IRunwayData | null;
   error: string | null;
   fileName: string | null;
-  canSave: boolean;
-  load: () => Promise<void>;
-  save: () => Promise<void>;
-  setData: (data: IRunwayData) => void;
+  saveStatus: TSaveStatus | null; // null until a file is open
+  open: () => Promise<void>;
+  update: (next: IRunwayData) => void;
+  retrySave: () => Promise<void>;
+  allowSaving: () => Promise<void>;
 }
 
 // Chrome and Edge ship with the File System Access API on. Brave ships with it off behind a
@@ -22,63 +32,77 @@ function fileAccessUnavailableMessage(): string {
 }
 
 function useRunwayFile(): IUseRunwayFileResult {
-  const [handle, setHandle] = useState<FileSystemFileHandle | null>(null);
-  const [data, setDataState] = useState<IRunwayData | null>(null);
+  const [data, setData] = useState<IRunwayData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<TSaveStatus | null>(null);
+  const [controller] = useState(() => createRunwayFileController({ onData: setData, onStatus: setSaveStatus }));
 
-  const load = useCallback(async () => {
+  // While a file is open: look for outside edits, write a waiting change before the tab hides,
+  // and warn before leaving with a change that is not in the file yet.
+  useEffect(() => {
+    if (!fileName) {
+      return undefined;
+    }
+    const poll = setInterval(() => {
+      if (document.visibilityState !== 'hidden') {
+        void controller.checkForOutsideChange();
+      }
+    }, POLL_INTERVAL_MS);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        controller.flush();
+      } else {
+        void controller.checkForOutsideChange();
+      }
+    };
+    const onFocus = () => {
+      void controller.checkForOutsideChange();
+    };
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (controller.hasUnsaved()) {
+        event.preventDefault();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      clearInterval(poll);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, [controller, fileName]);
+
+  useEffect(() => () => controller.dispose(), [controller]);
+
+  const open = useCallback(async () => {
     setError(null);
     if (!('showOpenFilePicker' in window)) {
       setError(fileAccessUnavailableMessage());
       return;
     }
     try {
-      const [selectedHandle] = await window.showOpenFilePicker({
+      const [selected] = await window.showOpenFilePicker({
         types: [{ description: 'Runway JSON', accept: { 'application/json': ['.json'] } }],
       });
-      const file = await selectedHandle.getFile();
-      const text = await file.text();
-      const parsed = parseRunwayData(text);
-      setHandle(selectedHandle);
-      setDataState(parsed);
-      setFileName(file.name);
+      // Asked now, inside the click: a save that fires on a timer cannot raise this prompt.
+      const writable = await requestWrite(selected);
+      setFileName(await controller.opened(selected, writable));
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
-        return; // user cancelled the picker, not an error
+        return; // the picker was cancelled, not an error
       }
       setError(err instanceof Error ? err.message : 'Failed to load the file.');
     }
-  }, []);
+  }, [controller]);
 
-  const save = useCallback(async () => {
-    if (!handle || !data) return;
-    setError(null);
-    let writable: FileSystemWritableFileStream | undefined;
-    try {
-      writable = await handle.createWritable();
-      await writable.write(serializeRunwayData(data));
-      await writable.close();
-    } catch (err) {
-      // If write() rejects after createWritable() already succeeded, the
-      // stream is left neither closed nor aborted -- it still holds a write
-      // lock on the handle, which can make the NEXT save() on this same
-      // handle fail with an unrelated "already has an active writer" error.
-      // Abort it here so a failed save doesn't silently break the retry.
-      await writable?.abort().catch(() => {});
-      setError(
-        err instanceof Error
-          ? `Could not save: ${err.message}. Try opening the file again.`
-          : 'Could not save the file.',
-      );
-    }
-  }, [handle, data]);
+  const update = useCallback((next: IRunwayData) => controller.change(next), [controller]);
+  const retrySave = useCallback(() => controller.writeNow(), [controller]);
+  const allowSaving = useCallback(() => controller.allow(), [controller]);
 
-  const setData = useCallback((next: IRunwayData) => {
-    setDataState(next);
-  }, []);
-
-  return { data, error, fileName, canSave: handle !== null, load, save, setData };
+  return { data, error, fileName, saveStatus, open, update, retrySave, allowSaving };
 }
 
 export default useRunwayFile;

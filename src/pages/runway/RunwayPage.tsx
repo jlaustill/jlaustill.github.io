@@ -14,7 +14,7 @@ import { calculateRunway } from './engine/runwayEngine';
 import type { IRunwayData } from './types/IRunwayData';
 
 export const RunwayApp = () => {
-  const { data, error, fileName, canSave, load, save, setData } = useRunwayFile();
+  const { data, error, fileName, open, update: updateData } = useRunwayFile();
   const today = useMemo(() => Temporal.Now.plainDateISO(), []);
 
   // The engine runs during render, so a failure is caught here: an error on screen keeps the
@@ -34,7 +34,7 @@ export const RunwayApp = () => {
   // every Tab, so a list whose saved form would be identical is not an edit.
   const update = <K extends keyof IRunwayData>(key: K) => (next: IRunwayData[K]) => {
     if (!data || JSON.stringify(data[key]) === JSON.stringify(next)) return;
-    setData({ ...data, [key]: next });
+    updateData({ ...data, [key]: next });
   };
 
   return (
@@ -43,11 +43,8 @@ export const RunwayApp = () => {
         Runway
       </Typography>
       <Box sx={{ display: 'flex', gap: 2 }}>
-        <Button variant="contained" onClick={load}>
+        <Button variant="contained" onClick={open}>
           Open runway.json
-        </Button>
-        <Button variant="outlined" onClick={save} disabled={!canSave}>
-          Save
         </Button>
       </Box>
       {error && (
