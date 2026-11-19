@@ -127,6 +127,10 @@ export const RunwayApp = () => {
           )}
           {tab === 'payoff' && (
             <Paper sx={{ p: 2 }}>
+              <Typography variant="h6">Debt payoff</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                When each debt is paid off, if every payment is made on time.
+              </Typography>
               {result ? (
                 <PayoffList payoffs={result.payoffs} />
               ) : (

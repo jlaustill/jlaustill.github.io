@@ -201,20 +201,21 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                             ))}
                           </TextField>
                         </Grid>
-                        {debt && (
+                        {/* The debt columns are always reserved on wide screens, so every row's
+                            fields line up whether or not the payment is a debt. */}
+                        {debt ? (
                           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
                             {optionalNumberField(index, 'balance', 'Balance', dollars)}
                           </Grid>
+                        ) : (
+                          <Grid size={{ md: 2 }} sx={{ display: { xs: 'none', md: 'block' } }} />
                         )}
-                        {debt && (
-                          <Grid size={{ xs: 6, sm: 3, md: 1 }}>
+                        {debt ? (
+                          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
                             {optionalNumberField(index, 'interestRate', 'Interest rate', percent)}
                           </Grid>
-                        )}
-                        {entry.type === 'mortgage' && (
-                          <Grid size={{ xs: 6, sm: 3, md: 1 }}>
-                            {optionalNumberField(index, 'escrow', 'Escrow', dollars)}
-                          </Grid>
+                        ) : (
+                          <Grid size={{ md: 2 }} sx={{ display: { xs: 'none', md: 'block' } }} />
                         )}
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                           <Field
@@ -229,7 +230,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                             onBlur={commitOnBlur}
                           />
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 6, md: 5 }}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                           <Field
                             as={TextField}
                             size="small"
@@ -240,7 +241,14 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                             onBlur={commitOnBlur}
                           />
                         </Grid>
-                        <Grid size={{ xs: 10, sm: 10, md: 3 }} sx={{ alignSelf: 'center' }}>
+                        {entry.type === 'mortgage' ? (
+                          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+                            {optionalNumberField(index, 'escrow', 'Escrow', dollars)}
+                          </Grid>
+                        ) : (
+                          <Grid size={{ md: 2 }} sx={{ display: { xs: 'none', md: 'block' } }} />
+                        )}
+                        <Grid size={{ xs: 10, sm: 10, md: 2 }} sx={{ alignSelf: 'center' }}>
                           {planText && (
                             <Typography variant="body2" color="text.secondary">
                               {planText}
