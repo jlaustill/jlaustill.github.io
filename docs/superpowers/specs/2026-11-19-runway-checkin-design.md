@@ -100,19 +100,31 @@ Runway  [runway.json] [⇄]                                [✓ Saved 7:02 AM]
 
 ## Check-in tab
 
-- **Balances card.** One row per cash account: the name, the institution in secondary text, and
-  an "Updated" line under the name. The amount sits in a labeled currency field.
+- **Balances card.** One row per cash account: the name as text, the institution in secondary
+  text, and an "Updated" line under the name. The amount sits in a labeled currency field.
   - "Updated today", "Updated yesterday" or "Updated N days ago", from the account's `updatedAt`.
     It turns amber after 7 days. With no `updatedAt`, it reads "Not dated", also in amber.
-  - **Editing a balance sets that account's `updatedAt` to today's date** (YYYY-MM-DD, local time).
-    Nothing else ever changes `updatedAt`.
-  - "Add account" adds a row; a delete icon removes one.
+  - **Editing a balance, or marking it checked, sets that account's `updatedAt` to today's
+    date** (YYYY-MM-DD, local time). Nothing else ever changes `updatedAt`.
+  - **Mark as checked** (my call): each row has a check icon button, tooltip "Balance is still
+    correct", that sets `updatedAt` to today without changing the amount. This is how an account
+    whose balance has not moved stops showing amber.
+  - **Accounts** (my call): "Add account" opens a small dialog with Name (required) and Balance
+    fields. Each row has a menu with **Rename** (the same dialog, name only) and **Delete**. So the
+    row stays clean, and an account can never be saved without a name. The current editor's tested
+    behaviors carry over: a required name, a new row starting at 0, and unknown keys kept on every
+    edit.
 - **Next 60 days card.** Every row dated from today through today + 60 days, in a table with
   Date ("Dec 1"), Name, Amount and Balance. Amounts are signed currency, green for money in and
   red for money out; Balance is currency.
-  - The lowest balance's row is highlighted and marked "low".
+  - The lowest balance in the window is highlighted and marked "low".
   - The table scrolls inside the card with a sticky header, so the page does not get longer.
   - If the runway ends inside the window, the last row is followed by a line saying so.
+  - **Show all** (my call, keeping today's tested behavior): a button under the table switches it
+    to the full 10-year schedule, and "Show next 60 days" switches back.
+- **Low points beyond the window** (my call): the Runway card's second line shows the lowest
+  balance over the whole horizon when it is lower than the 60-day low, for example "Lowest later:
+  $310 on Apr 3". A tight month after the window then still shows on the page.
 
 ## Other tabs
 
@@ -165,6 +177,11 @@ Runway  [runway.json] [⇄]                                [✓ Saved 7:02 AM]
   outside edits win.
 - **Before every write.** The page checks `lastModified` once more. If the file changed since
   the last read, it skips the write and loads the outside version instead.
+- **How strong this is** (my call): best effort. The File System Access API offers no file lock
+  and no "write only if unchanged", so one gap remains: an outside save that lands in the few
+  milliseconds between that last check and the end of the page's own write can be lost. Since a
+  lock file every outside tool would have to honor is not practical, the gap is accepted and
+  written down here instead of hidden.
 - **Unreadable outside version.** If the file was saved half-written or is not valid JSON, the
   page keeps what it shows, stops saving, and the chip reads "Can't read the file's new
   version". It keeps polling and recovers on the next readable version.
@@ -193,6 +210,12 @@ Runway  [runway.json] [⇄]                                [✓ Saved 7:02 AM]
   - the 60-day window bounds;
   - the low-point row;
   - currency and date formatting.
+- **Accounts:**
+  - "Mark as checked" writes only that account's `updatedAt`;
+  - the add dialog will not save without a name;
+  - Rename and Delete keep every other account and every unknown key exactly as they were;
+  - the existing "Show all" test is kept;
+  - the "Lowest later" line appears only when the whole-horizon low is lower than the 60-day low.
 - Fixtures stay made up, and the leak check runs before the PR.
 
 ## Left to the builder
