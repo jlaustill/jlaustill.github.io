@@ -26,8 +26,8 @@ describe('PaymentsEditor', () => {
   it('shows balance and interest rate for a debt, and neither for a utility', () => {
     render(<PaymentsEditor items={[card, power]} onChange={() => {}} />);
 
-    expect(screen.getAllByPlaceholderText('Balance')).toHaveLength(1);
-    expect(screen.getAllByPlaceholderText('Interest rate')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Balance')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Interest rate')).toHaveLength(1);
     expect(screen.getByDisplayValue('4000')).toBeInTheDocument();
     expect(screen.getByDisplayValue('22')).toBeInTheDocument();
   });
@@ -35,7 +35,7 @@ describe('PaymentsEditor', () => {
   it('shows escrow only for a mortgage', () => {
     render(<PaymentsEditor items={[home, card]} onChange={() => {}} />);
 
-    expect(screen.getAllByPlaceholderText('Escrow')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Escrow')).toHaveLength(1);
     expect(screen.getByDisplayValue('450')).toBeInTheDocument();
   });
 
@@ -58,7 +58,7 @@ describe('PaymentsEditor editing', () => {
     const user = userEvent.setup();
     render(<PaymentsEditor items={[{ name: 'Rent', amount: 1200, day: 1 }]} onChange={handleChange} />);
 
-    const amountInput = screen.getByPlaceholderText('Amount');
+    const amountInput = screen.getByLabelText('Amount');
     await user.clear(amountInput);
     await user.type(amountInput, '1250');
     await user.tab();
@@ -71,7 +71,7 @@ describe('PaymentsEditor editing', () => {
     const user = userEvent.setup();
     render(<PaymentsEditor items={[{ name: 'Loan', amount: 0, day: 6, pastDue: 500 }]} onChange={handleChange} />);
 
-    await user.click(screen.getByPlaceholderText('Day'));
+    await user.click(screen.getByLabelText('Day'));
     await user.tab();
 
     expect(handleChange).toHaveBeenCalledWith([{ name: 'Loan', amount: 0, day: 6, pastDue: 500 }]);
@@ -82,7 +82,7 @@ describe('PaymentsEditor editing', () => {
     const user = userEvent.setup();
     render(<PaymentsEditor items={[{ name: 'Rent', amount: 1200, day: 1 }]} onChange={handleChange} />);
 
-    await user.clear(screen.getByPlaceholderText('Amount'));
+    await user.clear(screen.getByLabelText('Amount'));
     await user.tab();
 
     expect(lastPayload(handleChange)).toEqual([{ name: 'Rent', amount: 0, day: 1 }]);
@@ -94,7 +94,7 @@ describe('PaymentsEditor editing', () => {
     const user = userEvent.setup();
     render(<PaymentsEditor items={[{ name: 'Rent', amount: 1200, day: 1 }]} onChange={handleChange} />);
 
-    await user.clear(screen.getByPlaceholderText('Day'));
+    await user.clear(screen.getByLabelText('Day'));
     await user.tab();
 
     expect(lastPayload(handleChange)).toEqual([{ name: 'Rent', amount: 1200, day: 0 }]);
@@ -106,7 +106,7 @@ describe('PaymentsEditor editing', () => {
     const user = userEvent.setup();
     render(<PaymentsEditor items={[card]} onChange={handleChange} />);
 
-    await user.clear(screen.getByPlaceholderText('Balance'));
+    await user.clear(screen.getByLabelText('Balance'));
     await user.tab();
 
     const { balance: _cleared, ...withoutBalance } = card;
@@ -120,7 +120,7 @@ describe('PaymentsEditor editing', () => {
     const user = userEvent.setup();
     render(<PaymentsEditor items={[{ name: 'Card', amount: 300, day: 9, type: 'creditCard', balance: 4000 }]} onChange={handleChange} />);
 
-    await user.type(screen.getByPlaceholderText('Interest rate'), '22.5');
+    await user.type(screen.getByLabelText('Interest rate'), '22.5');
     await user.tab();
 
     expect(lastPayload(handleChange)[0].interestRate).toBe(22.5);
@@ -131,10 +131,10 @@ describe('PaymentsEditor editing', () => {
     const user = userEvent.setup();
     render(<PaymentsEditor items={[power]} onChange={handleChange} />);
 
-    await user.selectOptions(screen.getByDisplayValue('utility'), 'mortgage');
+    await user.selectOptions(screen.getByDisplayValue('Utility'), 'mortgage');
 
     expect(lastPayload(handleChange)).toEqual([{ ...power, type: 'mortgage' }]);
-    expect(screen.getByPlaceholderText('Escrow')).toBeInTheDocument();
+    expect(screen.getByLabelText('Escrow')).toBeInTheDocument();
   });
 
   it('keeps a payment plan, including keys it does not show, through a name edit', async () => {
@@ -180,9 +180,9 @@ describe('PaymentsEditor editing', () => {
 
     await user.click(screen.getAllByLabelText('Remove')[0]);
 
-    expect((screen.getByPlaceholderText('Creditor') as HTMLInputElement).value).toBe('');
-    expect((screen.getByPlaceholderText('Note') as HTMLInputElement).value).toBe('');
-    await user.type(screen.getByPlaceholderText('Creditor'), 'X');
+    expect((screen.getByLabelText('Creditor') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Note') as HTMLInputElement).value).toBe('');
+    await user.type(screen.getByLabelText('Creditor'), 'X');
     await user.tab();
     expect(lastPayload(handleChange)).toEqual([{ ...plain, creditor: 'X' }]);
   });
@@ -203,5 +203,34 @@ describe('PaymentsEditor editing', () => {
     await user.click(screen.getAllByLabelText('Remove')[0]);
 
     expect(lastPayload(handleChange)).toEqual([homeWithHistory]);
+  });
+
+  it('shows types as words while storing the type itself', async () => {
+    const handleChange = vi.fn();
+    const user = userEvent.setup();
+    render(<PaymentsEditor items={[power]} onChange={handleChange} />);
+
+    expect(screen.getByDisplayValue('Utility')).toBeInTheDocument();
+    await user.selectOptions(screen.getByDisplayValue('Utility'), 'Credit card');
+
+    expect(lastPayload(handleChange)[0].type).toBe('creditCard');
+    expect(screen.getByDisplayValue('Credit card')).toBeInTheDocument();
+  });
+
+  it('marks money as dollars and the interest rate as a percentage', () => {
+    render(<PaymentsEditor items={[card]} onChange={() => {}} />);
+
+    expect(screen.getAllByText('$').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('%')).toBeInTheDocument();
+  });
+
+  it('says a name is required once a cleared name is left', async () => {
+    const user = userEvent.setup();
+    render(<PaymentsEditor items={[power]} onChange={() => {}} />);
+
+    await user.clear(screen.getByLabelText('Name'));
+    await user.tab();
+
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
   });
 });

@@ -1,97 +1,111 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { RunwayApp } from './RunwayPage';
-import type { IRunwayData } from './types/IRunwayData';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, screen, within } from '@testing-library/react';
+import { Temporal } from '@js-temporal/polyfill';
+import { SAVE_DELAY_MS } from './hooks/useRunwayFile';
+import { parseMoneyInput } from './format';
+import { openInPage, settle } from './testUtils/pageRoundTrip';
 
-// Seed data deliberately makes the "Rent" payment unaffordable (far larger than starting
-// cash plus any paycheck before it), so the schedule stops at the first rent. That keeps the
-// rendered schedule short whatever calendar date the test runs on, while still exercising a
-// real cash account, a real payment, and real recurring income end to end.
-const seedData: IRunwayData = {
-  cashOnHand: [{ name: 'Checking', amount: 500 }],
+const today = Temporal.Now.plainDateISO().toString();
+const seed = {
+  cashOnHand: [{ name: 'Checking', amount: 500, updatedAt: today }],
   expectedInflows: [],
-  payments: [{ name: 'Rent', amount: 5_000_000, day: 1 }],
+  payments: [{ name: 'Rent', amount: 400, day: 1 }],
   recurringIncome: [{ name: 'Paycheck', amount: 1000, schedule: 'monthly', days: [15] }],
 };
 
-function stubFilePicker(data: IRunwayData) {
-  const fakeFile = {
-    name: 'runway.json',
-    text: async () => JSON.stringify(data),
-  };
-  const fakeHandle = {
-    getFile: async () => fakeFile,
-  };
-  vi.stubGlobal('showOpenFilePicker', vi.fn().mockResolvedValue([fakeHandle]));
-}
+describe('RunwayApp', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
 
-describe('RunwayApp integration', () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
-  it('does not crash and recomputes a real numeric schedule when a number field is cleared to empty', async () => {
-    stubFilePicker(seedData);
-    const user = userEvent.setup();
-    render(<RunwayApp />);
+  it('opens on the check-in with the summary, the balances and the next 60 days', async () => {
+    await openInPage(JSON.stringify(seed));
 
-    await user.click(screen.getByText('Open runway.json'));
+    expect(screen.getByRole('tab', { name: 'Check-in', selected: true })).toBeInTheDocument();
+    expect(screen.getByText('Cash now')).toBeInTheDocument();
+    expect(screen.getByText('$500')).toBeInTheDocument();
+    expect(screen.getByText('Next 60 days')).toBeInTheDocument();
 
-    // Wait for the async file load to land real IRunwayData in state, wiring
-    // CashOnHandEditor, RecurringIncomeEditor, PaymentsEditor and RunwaySchedule together
-    // exactly the way RunwayPage.tsx composes them.
-    expect(await screen.findByDisplayValue('Checking')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Rent')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Paycheck')).toBeInTheDocument();
-
-    // The Cash on Hand amount field is the first "Amount" field on the page
-    // (CashOnHandEditor renders before the other editors).
-    const amountInputs = screen.getAllByPlaceholderText('Amount');
-    const cashOnHandAmountInput = amountInputs[0];
-
-    // This is the exact crash scenario from Finding 1: clearing a number field to
-    // empty used to make `values.entries.reduce((sum, e) => sum + e.amount, 0)`
-    // produce the STRING '0' (via string concatenation with amount === ''), and
-    // `.toFixed(2)` on that threw, unmounting the whole page. Rendering through
-    // this without throwing, plus the exact "$0.00" total below, is the regression
-    // guard for Finding 1.
-    await user.clear(cashOnHandAmountInput);
-    await user.tab();
-
-    expect(screen.getByText('Total: $0.00')).toBeInTheDocument();
-
-    // The page must still be fully mounted -- not replaced by React's uncaught-error
-    // unmount -- and the schedule must have recomputed off the new (numeric) data.
-    expect(screen.getByText('Projected Schedule')).toBeInTheDocument();
-
-    // Prove the recomputed schedule is carrying real numbers end to end (data ->
-    // editor onChange -> setData -> calculateRunway -> RunwaySchedule),
-    // not strings or NaN from a corrupted amount. Every Amount/Balance cell must
-    // parse as a finite number, and the running balance must be internally
-    // consistent (each row's balance = previous balance + that row's amount).
-    const rows = screen.getAllByRole('row').slice(1); // drop the header row
-    let runningBalance = 0; // startingBalance is now 0 after the clear above
-    for (const row of rows) {
+    // Every running balance in the table follows from the one before it. The low point's
+    // balance cell also carries a "low" marker.
+    let running = 500;
+    for (const row of screen.getAllByRole('row').slice(1)) {
       const cells = within(row).getAllByRole('cell');
-      const amountText = cells[2].textContent ?? '';
-      const balanceText = cells[3].textContent ?? '';
-      const amount = Number(amountText);
-      const balance = Number(balanceText);
-
-      expect(Number.isNaN(amount)).toBe(false);
-      expect(Number.isNaN(balance)).toBe(false);
-
-      runningBalance += amount;
-      expect(balance).toBeCloseTo(runningBalance, 2);
+      running += parseMoneyInput(cells[2].textContent ?? '') ?? Number.NaN;
+      const balanceText = (cells[3].textContent ?? '').replace('low', '');
+      expect(parseMoneyInput(balanceText)).toBeCloseTo(running, 2);
     }
+  }, 60_000);
 
-    // Nice-to-have: exercise the note field in PaymentsEditor while we have the
-    // whole tree mounted, proving it round-trips through the same real data flow.
-    const noteInput = screen.getByPlaceholderText('Note');
-    await user.type(noteInput, 'Autopay pending');
+  it('follows a changed balance through to the summary and the file', async () => {
+    const { user, file } = await openInPage(JSON.stringify(seed));
+
+    const field = within(screen.getAllByRole('listitem')[0]).getByLabelText('Balance');
+    await user.clear(field);
+    await user.type(field, '800');
     await user.tab();
 
-    expect(screen.getByDisplayValue('Autopay pending')).toBeInTheDocument();
-  });
+    expect(screen.getByText('$800')).toBeInTheDocument();
+    await settle(SAVE_DELAY_MS);
+    expect(JSON.parse(file.writes[0]).cashOnHand[0].amount).toBe(800);
+  }, 60_000);
+
+  it('dates a balance edit with the day it is made, not the day the page was opened', async () => {
+    vi.setSystemTime(new Date(2026, 10, 19, 23, 59));
+    const { user, file } = await openInPage(JSON.stringify(seed));
+    vi.setSystemTime(new Date(2026, 10, 21, 8, 0));
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    const field = within(screen.getAllByRole('listitem')[0]).getByLabelText('Balance');
+    await user.clear(field);
+    await user.type(field, '800');
+    await user.tab();
+    await settle(SAVE_DELAY_MS);
+
+    expect(JSON.parse(file.writes[0]).cashOnHand[0].updatedAt).toBe('2026-11-21');
+  }, 60_000);
+
+  it('saves a balance still being typed in when the tab is about to close', async () => {
+    const { user, file } = await openInPage(JSON.stringify(seed));
+    const field = within(screen.getAllByRole('listitem')[0]).getByLabelText('Balance');
+    await user.clear(field);
+    await user.type(field, '800');
+
+    const leaving = new Event('beforeunload', { cancelable: true });
+    act(() => {
+      window.dispatchEvent(leaving);
+    });
+
+    expect(leaving.defaultPrevented).toBe(true);
+    await settle(SAVE_DELAY_MS);
+    expect(JSON.parse(file.writes[0]).cashOnHand[0].amount).toBe(800);
+  }, 60_000);
+
+  it('asks before opening another file would throw away changes that cannot be saved', async () => {
+    const { user } = await openInPage(JSON.stringify(seed), { permission: 'denied' });
+    const picker = vi.mocked(window.showOpenFilePicker);
+    const field = within(screen.getAllByRole('listitem')[0]).getByLabelText('Balance');
+    await user.clear(field);
+    await user.type(field, '800');
+    await user.tab();
+    picker.mockClear();
+
+    await user.click(screen.getByRole('button', { name: 'Open a different file' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('not saved');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+    await settle(500);
+    expect(picker).not.toHaveBeenCalled();
+    expect(screen.getByText('$800')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Open a different file' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard and open' }));
+    expect(picker).toHaveBeenCalledTimes(1);
+  }, 60_000);
 });

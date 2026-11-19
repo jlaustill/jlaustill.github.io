@@ -39,7 +39,7 @@ describe('ExpectedInflowsEditor', () => {
     const dateInputs = container.querySelectorAll('input[type="date"]');
     expect((dateInputs[0] as HTMLInputElement).value).toBe('');
     expect((dateInputs[1] as HTMLInputElement).value).toBe('2027-04-15');
-    expect((screen.getAllByPlaceholderText('Amount')[0] as HTMLInputElement).value).toBe('');
+    expect((screen.getAllByLabelText('Amount')[0] as HTMLInputElement).value).toBe('');
 
     const gotNullValueWarning = consoleErrorSpy.mock.calls.some((args) =>
       args.some((arg) => typeof arg === 'string' && arg.includes('should not be null')),
@@ -65,7 +65,7 @@ describe('ExpectedInflowsEditor editing', () => {
     const user = userEvent.setup();
     render(<ExpectedInflowsEditor items={[bonus]} onChange={handleChange} />);
 
-    const amountInput = screen.getByPlaceholderText('Amount');
+    const amountInput = screen.getByLabelText('Amount');
     await user.clear(amountInput);
     await user.type(amountInput, '950');
     await user.tab();
@@ -78,7 +78,7 @@ describe('ExpectedInflowsEditor editing', () => {
     const user = userEvent.setup();
     render(<ExpectedInflowsEditor items={[bonus]} onChange={handleChange} />);
 
-    await user.clear(screen.getByPlaceholderText('Amount'));
+    await user.clear(screen.getByLabelText('Amount'));
     await user.tab();
 
     expect(lastPayload(handleChange)).toEqual([{ ...bonus, amount: null }]);
@@ -113,7 +113,7 @@ describe('ExpectedInflowsEditor editing', () => {
     const user = userEvent.setup();
     render(<ExpectedInflowsEditor items={[bonus]} onChange={handleChange} />);
 
-    await user.clear(screen.getByPlaceholderText('YYYY-MM'));
+    await user.clear(screen.getByLabelText('Expected month'));
     await user.tab();
 
     expect(lastPayload(handleChange)).toEqual([{ ...bonus, expectedMonth: null }]);
@@ -139,5 +139,21 @@ describe('ExpectedInflowsEditor editing', () => {
     expect(handleChange).toHaveBeenCalledWith([
       { name: '', amount: null, date: null, expectedMonth: null, confirmed: false },
     ]);
+  });
+
+  it('says a name is required once a cleared name is left', async () => {
+    const user = userEvent.setup();
+    render(<ExpectedInflowsEditor items={[bonus]} onChange={() => {}} />);
+
+    await user.clear(screen.getByLabelText('Name'));
+    await user.tab();
+
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
+  });
+
+  it('marks the amount as dollars', () => {
+    render(<ExpectedInflowsEditor items={[bonus]} onChange={() => {}} />);
+
+    expect(screen.getByText('$')).toBeInTheDocument();
   });
 });

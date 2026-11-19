@@ -1,9 +1,12 @@
 import { Formik, Form, Field, FieldArray } from 'formik';
 import * as Yup from 'yup';
-import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
+import { Button, Grid, IconButton, InputAdornment, TextField, Typography, type TextFieldProps } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { isDebtType } from '../engine/debt';
+import { paymentTypeLabel } from '../format';
 import type { IPayment, IPaymentPlan } from '../types/IRunwayData';
+import { fieldError } from './fieldError';
 import { numberOrZero, parseNumber } from './fieldValues';
 
 interface IPaymentsEditorProps {
@@ -31,7 +34,7 @@ const paymentsSchema = Yup.object({
     Yup.object({
       name: Yup.string().required('Name is required'),
       amount: Yup.number().required('Amount is required'),
-      day: Yup.number().min(1).max(31).required('Day is required'),
+      day: Yup.number().min(1, 'Day must be 1 to 31').max(31, 'Day must be 1 to 31').required('Day is required'),
       creditor: Yup.string().optional(),
       note: Yup.string().optional(),
       balance: Yup.number().optional(),
@@ -40,6 +43,15 @@ const paymentsSchema = Yup.object({
     }),
   ),
 });
+
+const dollars = {
+  input: { startAdornment: <InputAdornment position="start">$</InputAdornment> },
+  inputLabel: { shrink: true },
+};
+const percent = {
+  input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
+  inputLabel: { shrink: true },
+};
 
 function describePlan(plan: IPaymentPlan): string | null {
   if (!Array.isArray(plan.dueDates) || plan.dueDates.length === 0) {
@@ -73,7 +85,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
       enableReinitialize
       onSubmit={() => {}}
     >
-      {({ values, handleBlur, setFieldValue }) => {
+      {({ values, errors, touched, handleBlur, setFieldValue }) => {
         const commitOnBlur = (e: React.FocusEvent<HTMLInputElement>) => {
           handleBlur(e);
           onChange(values.entries);
@@ -81,14 +93,21 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
 
         // Balance, interest rate and escrow left blank remove the key, so the engine reports the
         // value as missing. A blank balance must never become 0: that reads as paid off.
-        const optionalNumberField = (index: number, field: TOptionalNumberField, placeholder: string) => (
+        const optionalNumberField = (
+          index: number,
+          field: TOptionalNumberField,
+          label: string,
+          adornment: TextFieldProps['slotProps'],
+        ) => (
           <Field
             as={TextField}
             size="small"
+            fullWidth
             type="number"
+            label={label}
             name={`entries.${index}.${field}`}
-            placeholder={placeholder}
             value={values.entries[index][field] ?? ''}
+            slotProps={adornment}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setFieldValue(`entries.${index}.${field}`, parseNumber(e.target.value) ?? undefined);
             }}
@@ -98,111 +117,167 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
 
         return (
           <Form>
-            <Typography variant="h6">Payments &amp; Debts</Typography>
+            <Typography variant="h6" gutterBottom>
+              Payments &amp; Debts
+            </Typography>
             <FieldArray name="entries">
               {({ push, remove }) => (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <>
                   {values.entries.map((entry, index) => {
                     const typeOptions =
                       entry.type === undefined || entry.type === '' || PAYMENT_TYPES.includes(entry.type)
                         ? PAYMENT_TYPES
                         : [...PAYMENT_TYPES, entry.type];
                     const planText = entry.paymentPlan ? describePlan(entry.paymentPlan) : null;
+                    const debt = isDebtType(entry.type);
                     return (
-                      <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <Field
-                          as={TextField}
-                          size="small"
-                          name={`entries.${index}.name`}
-                          placeholder="Name"
-                          onBlur={commitOnBlur}
-                        />
-                        <Field
-                          as={TextField}
-                          size="small"
-                          type="number"
-                          name={`entries.${index}.amount`}
-                          placeholder="Amount"
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            setFieldValue(`entries.${index}.amount`, numberOrZero(e.target.value));
-                          }}
-                          onBlur={commitOnBlur}
-                        />
-                        <Field
-                          as={TextField}
-                          size="small"
-                          type="number"
-                          name={`entries.${index}.day`}
-                          placeholder="Day"
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            setFieldValue(`entries.${index}.day`, numberOrZero(e.target.value));
-                          }}
-                          onBlur={commitOnBlur}
-                        />
-                        <TextField
-                          select
-                          size="small"
-                          slotProps={{ select: { native: true } }}
-                          value={entry.type ?? ''}
-                          onChange={(event) => {
-                            const type = event.target.value;
-                            setFieldValue(`entries.${index}.type`, type === '' ? undefined : type);
-                            onChange(values.entries.map((item, i) => (i === index ? withType(item, type) : item)));
-                          }}
-                        >
-                          <option value="">(no type)</option>
-                          {typeOptions.map((type) => (
-                            <option key={type} value={type}>
-                              {type}
-                            </option>
-                          ))}
-                        </TextField>
-                        {isDebtType(entry.type) && optionalNumberField(index, 'balance', 'Balance')}
-                        {isDebtType(entry.type) && optionalNumberField(index, 'interestRate', 'Interest rate')}
-                        {entry.type === 'mortgage' && optionalNumberField(index, 'escrow', 'Escrow')}
-                        <Field
-                          as={TextField}
-                          size="small"
-                          name={`entries.${index}.creditor`}
-                          placeholder="Creditor"
-                          // Controlled even when the key is absent, so a removed row's text can
-                          // never linger in the row that moves up into its place
-                          value={entry.creditor ?? ''}
-                          onBlur={commitOnBlur}
-                        />
-                        <Field
-                          as={TextField}
-                          size="small"
-                          name={`entries.${index}.note`}
-                          placeholder="Note"
-                          value={entry.note ?? ''}
-                          sx={{ minWidth: 200 }}
-                          onBlur={commitOnBlur}
-                        />
-                        {planText && (
-                          <Typography variant="body2" color="text.secondary">
-                            {planText}
-                          </Typography>
+                      <Grid
+                        container
+                        spacing={1}
+                        alignItems="flex-start"
+                        key={index}
+                        sx={{ py: 1, borderBottom: 1, borderColor: 'divider' }}
+                      >
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <Field
+                            as={TextField}
+                            size="small"
+                            fullWidth
+                            label="Name"
+                            name={`entries.${index}.name`}
+                            {...fieldError(errors, touched, `entries.${index}.name`)}
+                            onBlur={commitOnBlur}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+                          <Field
+                            as={TextField}
+                            size="small"
+                            fullWidth
+                            type="number"
+                            label="Amount"
+                            name={`entries.${index}.amount`}
+                            slotProps={dollars}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              setFieldValue(`entries.${index}.amount`, numberOrZero(e.target.value));
+                            }}
+                            onBlur={commitOnBlur}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 3, md: 1 }}>
+                          <Field
+                            as={TextField}
+                            size="small"
+                            fullWidth
+                            type="number"
+                            label="Day"
+                            name={`entries.${index}.day`}
+                            {...fieldError(errors, touched, `entries.${index}.day`)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              setFieldValue(`entries.${index}.day`, numberOrZero(e.target.value));
+                            }}
+                            onBlur={commitOnBlur}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                          <TextField
+                            select
+                            size="small"
+                            fullWidth
+                            label="Type"
+                            slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                            value={entry.type ?? ''}
+                            onChange={(event) => {
+                              const type = event.target.value;
+                              setFieldValue(`entries.${index}.type`, type === '' ? undefined : type);
+                              onChange(values.entries.map((item, i) => (i === index ? withType(item, type) : item)));
+                            }}
+                          >
+                            <option value="">{paymentTypeLabel(undefined)}</option>
+                            {typeOptions.map((type) => (
+                              <option key={type} value={type}>
+                                {paymentTypeLabel(type)}
+                              </option>
+                            ))}
+                          </TextField>
+                        </Grid>
+                        {/* The debt columns are always reserved on wide screens, so every row's
+                            fields line up whether or not the payment is a debt. */}
+                        {debt ? (
+                          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+                            {optionalNumberField(index, 'balance', 'Balance', dollars)}
+                          </Grid>
+                        ) : (
+                          <Grid size={{ md: 2 }} sx={{ display: { xs: 'none', md: 'block' } }} />
                         )}
-                        {entry.pastDue ? (
-                          <Typography variant="body2" color="error">
-                            past due ${entry.pastDue.toFixed(2)}
-                          </Typography>
-                        ) : null}
-                        <IconButton
-                          aria-label="Remove"
-                          onClick={() => {
-                            remove(index);
-                            onChange(values.entries.filter((_, i) => i !== index));
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
+                        {debt ? (
+                          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+                            {optionalNumberField(index, 'interestRate', 'Interest rate', percent)}
+                          </Grid>
+                        ) : (
+                          <Grid size={{ md: 2 }} sx={{ display: { xs: 'none', md: 'block' } }} />
+                        )}
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <Field
+                            as={TextField}
+                            size="small"
+                            fullWidth
+                            label="Creditor"
+                            name={`entries.${index}.creditor`}
+                            // Controlled even when the key is absent, so a removed row's text can
+                            // never linger in the row that moves up into its place
+                            value={entry.creditor ?? ''}
+                            onBlur={commitOnBlur}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                          <Field
+                            as={TextField}
+                            size="small"
+                            fullWidth
+                            label="Note"
+                            name={`entries.${index}.note`}
+                            value={entry.note ?? ''}
+                            onBlur={commitOnBlur}
+                          />
+                        </Grid>
+                        {entry.type === 'mortgage' ? (
+                          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
+                            {optionalNumberField(index, 'escrow', 'Escrow', dollars)}
+                          </Grid>
+                        ) : (
+                          <Grid size={{ md: 2 }} sx={{ display: { xs: 'none', md: 'block' } }} />
+                        )}
+                        <Grid size={{ xs: 10, sm: 10, md: 2 }} sx={{ alignSelf: 'center' }}>
+                          {planText && (
+                            <Typography variant="body2" color="text.secondary">
+                              {planText}
+                            </Typography>
+                          )}
+                          {entry.pastDue ? (
+                            <Typography variant="body2" color="error">
+                              past due ${entry.pastDue.toFixed(2)}
+                            </Typography>
+                          ) : null}
+                        </Grid>
+                        <Grid size={{ xs: 2, sm: 2, md: 1 }}>
+                          <IconButton
+                            aria-label="Remove"
+                            onClick={() => {
+                              remove(index);
+                              onChange(values.entries.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Grid>
+                      </Grid>
                     );
                   })}
                   <Button
                     type="button"
+                    startIcon={<AddIcon />}
+                    sx={{ mt: 1 }}
                     onClick={() => {
                       const next: IPayment = { name: '', amount: 0, day: 1 };
                       push(next);
@@ -211,7 +286,7 @@ const PaymentsEditor = ({ items, onChange }: IPaymentsEditorProps) => {
                   >
                     Add Payment
                   </Button>
-                </Box>
+                </>
               )}
             </FieldArray>
           </Form>

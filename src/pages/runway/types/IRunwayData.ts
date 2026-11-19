@@ -6,6 +6,7 @@ export interface ICashOnHandEntry {
   amount: number;
   institution?: string;
   note?: string;
+  updatedAt?: string | null; // YYYY-MM-DD the balance was last updated or checked
 }
 
 export interface IExpectedInflow {

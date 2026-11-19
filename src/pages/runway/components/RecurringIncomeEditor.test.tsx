@@ -96,4 +96,22 @@ describe('RecurringIncomeEditor', () => {
 
     expect(handleChange).toHaveBeenCalledWith([sideJob]);
   });
+
+  it('labels its fields and gives the days an example', () => {
+    render(<RecurringIncomeEditor items={[salary]} onChange={() => {}} />);
+
+    expect(screen.getByLabelText('Name')).toHaveValue('Salary');
+    expect(screen.getByLabelText('Days')).toHaveValue('1, 15');
+    expect(screen.getByText('e.g. 1, 15')).toBeInTheDocument();
+  });
+
+  it('says a name is required once a cleared name is left', async () => {
+    const user = userEvent.setup();
+    render(<RecurringIncomeEditor items={[salary]} onChange={() => {}} />);
+
+    await user.clear(screen.getByLabelText('Name'));
+    await user.tab();
+
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
+  });
 });
