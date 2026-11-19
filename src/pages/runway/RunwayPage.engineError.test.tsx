@@ -23,7 +23,7 @@ describe('RunwayApp when the engine fails', () => {
     vi.unstubAllGlobals();
   });
 
-  it('shows the error and keeps the editors and Save on screen', async () => {
+  it('shows the error and keeps the editors on screen', async () => {
     const handle = { getFile: async () => ({ name: 'runway.json', text: async () => JSON.stringify(file) }) };
     vi.stubGlobal('showOpenFilePicker', vi.fn().mockResolvedValue([handle]));
     const user = userEvent.setup();
@@ -32,7 +32,7 @@ describe('RunwayApp when the engine fails', () => {
     await user.click(screen.getByText('Open runway.json'));
 
     expect(await screen.findByText('Could not calculate the runway: engine exploded')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Checking')).toBeInTheDocument();
+    expect(screen.getByText('Checking')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Rent')).toBeInTheDocument();
   });
 });

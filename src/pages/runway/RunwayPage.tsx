@@ -4,7 +4,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import useBrowserSide from '../../hooks/useBrowserSide';
 import useRunwayFile from './hooks/useRunwayFile';
 import RunwaySkeleton from './RunwaySkeleton';
-import CashOnHandEditor from './components/CashOnHandEditor';
+import BalancesCard from './components/BalancesCard';
 import ExpectedInflowsEditor from './components/ExpectedInflowsEditor';
 import PaymentsEditor from './components/PaymentsEditor';
 import RecurringIncomeEditor from './components/RecurringIncomeEditor';
@@ -60,7 +60,7 @@ export const RunwayApp = () => {
       )}
       {data && (
         <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <CashOnHandEditor items={data.cashOnHand} onChange={update('cashOnHand')} />
+          <BalancesCard items={data.cashOnHand} onChange={update('cashOnHand')} today={today} />
           <RecurringIncomeEditor items={data.recurringIncome} onChange={update('recurringIncome')} />
           <ExpectedInflowsEditor items={data.expectedInflows} onChange={update('expectedInflows')} />
           <PaymentsEditor items={data.payments} onChange={update('payments')} />
