@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, vi } from 'vitest';
+import { vi } from 'vitest';
 import { RunwayApp } from '../RunwayPage';
+import { createFakeFile, stubFilePicker, type IFakeFile } from './fakeFileHandle';
 
 // A made-up file with the same shape as a real one: null amounts and dates, an approximate
 // month, keys the page never displays at every level (including inside a payment plan), and
@@ -112,38 +113,44 @@ export const liveShapedFile = {
   extraTopLevelKey: { kept: true },
 };
 
-// Renders the real page, opens `fileText` through a stubbed file picker, tabs through every
-// focusable element without typing anything, clicks Save, and returns the text that was saved.
-export async function saveWithoutEdits(fileText: string): Promise<string> {
-  const captured: { text: string | null } = { text: null };
-  const writable = {
-    write: async (text: string) => {
-      captured.text = text;
-    },
-    close: async () => {},
-    abort: async () => {},
-  };
-  const handle = {
-    getFile: async () => ({ name: 'runway.json', text: async () => fileText }),
-    createWritable: async () => writable,
-  };
-  vi.stubGlobal('showOpenFilePicker', vi.fn().mockResolvedValue([handle]));
+export const RUNWAY_TABS = ['Check-in', 'Income', 'Bills & debts', 'Payoff'];
 
-  try {
-    const user = userEvent.setup();
-    render(<RunwayApp />);
-    await user.click(screen.getByText('Open runway.json'));
-    await screen.findByText(/^Loaded:/);
+type TUser = ReturnType<typeof userEvent.setup>;
 
-    const focusableCount = document.querySelectorAll('input, select, textarea, button').length;
-    for (let i = 0; i <= focusableCount; i++) {
+// Renders the real page and opens `fileText` from a fake file. Call
+// vi.useFakeTimers({ shouldAdvanceTime: true }) first (user-event stalls on a frozen clock):
+// saving and the outside-edit checks run on timers.
+export async function openInPage(fileText: string): Promise<{ user: TUser; file: IFakeFile }> {
+  const file = createFakeFile(fileText);
+  stubFilePicker(file);
+  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  render(<RunwayApp />);
+  await user.click(screen.getByRole('button', { name: 'Open runway.json' }));
+  // findBy* waits on timers, which fake timers freeze; flush the open step explicitly instead.
+  for (let attempt = 0; attempt < 20 && !screen.queryByRole('tab', { name: 'Check-in' }); attempt++) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10);
+    });
+  }
+  if (!screen.queryByRole('tab', { name: 'Check-in' })) {
+    throw new Error('The page did not open the file');
+  }
+  return { user, file };
+}
+
+// Opens every tab and moves focus through every field and button on it, typing nothing.
+export async function visitEveryTabAndField(user: TUser): Promise<void> {
+  for (const name of RUNWAY_TABS) {
+    await user.click(screen.getByRole('tab', { name }));
+    const focusable = document.querySelectorAll('input, select, textarea, button').length;
+    for (let i = 0; i <= focusable; i++) {
       await user.tab();
     }
-
-    await user.click(screen.getByText('Save'));
-    await waitFor(() => expect(captured.text).not.toBeNull());
-    return captured.text ?? '';
-  } finally {
-    vi.unstubAllGlobals();
   }
 }
+
+// Lets any waiting save, and any outside-edit check, run.
+export const settle = (ms = 5000) =>
+  act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });

@@ -33,6 +33,7 @@ describe('RunwayApp when the engine fails', () => {
 
     expect(await screen.findByText('Could not calculate the runway: engine exploded')).toBeInTheDocument();
     expect(screen.getByText('Checking')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Bills & debts' }));
     expect(screen.getByDisplayValue('Rent')).toBeInTheDocument();
   });
 });
